@@ -24,20 +24,21 @@ export function generateCSV(data: AnchorOpportunity[], pillarUrl: string): strin
   const today = new Date().toLocaleDateString('pt-BR');
 
   // Cabeçalho Hierárquico conforme modelo solicitado
+  // Adicionando colunas extras solicitadas: Tipo, Score, Frase na Satellite, Frase na Pillar
   const lines = [
     // Linha 1: Título Geral
-    `"","","Auditoria de Linkagem Interna: ${domain} ","","","","","","",""`,
+    `"","","Auditoria de Linkagem Interna: ${domain} ","","","","","","","","",""`,
     // Linhas 2-3: Vazias
-    `"","","","","","","","","",""`,
-    `"","","","","","","","","",""`,
+    `"","","","","","","","","","","",""`,
+    `"","","","","","","","","","","",""`,
     // Linha 4: Cabeçalho do Pilar
-    `"#1","URL da Página Pilar","","","Produto/Serviço","","","","","Data de Implementação"`,
+    `"#1","URL da Página Pilar","","","Produto/Serviço","","","","","Data de Implementação","",""`,
     // Linha 5: Dados do Pilar
-    `${sanitize(pillarUrl)},"","","","","","","","","${today}"`,
+    `${sanitize(pillarUrl)},"","","","","","","","","${today}","",""`,
     // Linha 6: Vazia
-    `"","","","","","","","","",""`,
+    `"","","","","","","","","","","",""`,
     // Linha 7: Cabeçalho das Oportunidades
-    `"","URL página","Frase na Satellite (Onde inserir)","Texto Âncora","Frase na Pillar (Origem do termo)","","Parágrafo em que podemos vincular à página pilar","","Otimização Implementada",""`
+    `"","URL página","","Texto Âncora","Tipo","Score","Instrução/Parágrafo","Frase na Satellite (Onde inserir)","Otimização Implementada","Frase na Pillar (Origem do termo)"`
   ];
 
   // Linhas de dados (Oportunidades)
@@ -45,29 +46,17 @@ export function generateCSV(data: AnchorOpportunity[], pillarUrl: string): strin
     // Instrução + Parágrafo
     const instruction = `Inserir a marcação do hiperlink na âncora sinalizada em negrito:\n\n${row.trecho}`;
     
-    // Mapeamento das colunas (baseado no exemplo visual e solicitação):
-    // A (#): ID sequencial
-    // B: URL página (Satélite)
-    // C: Frase na Satellite (Onde inserir)
-    // D: Texto Âncora
-    // E: Frase na Pillar (Origem do termo)
-    // F: Vazio
-    // G: Instrução + Parágrafo
-    // H: Vazio
-    // I: Otimização Implementada (TRUE)
-    // J: Vazio
-    
     const line = [
       index + 1,                    // A: ID
-      sanitize(row.origem),         // B: URL
-      sanitize(row.trecho),         // C: Frase Satellite
+      sanitize(row.origem),         // B: URL Origem
+      "",                           // C
       sanitize(row.anchor),         // D: Âncora
-      sanitize(row.pillarContext || "N/A"), // E: Frase Pillar
-      "",                           // F
-      sanitize(instruction),        // G: Parágrafo com instrução
-      "",                           // H
+      sanitize(row.type || "exact"), // E: Tipo
+      sanitize(row.score?.toFixed(2) || "0.00"), // F: Score
+      sanitize(instruction),        // G: Instrução
+      sanitize(row.trecho),         // H: Frase na Satellite
       "TRUE",                       // I: Status
-      ""                            // J
+      sanitize(row.pillar_context || "N/A") // J: Frase na Pillar
     ].join(",");
     
     lines.push(line);
@@ -109,21 +98,25 @@ export function generateJSON(data: AnchorOpportunity[]): string {
  * @returns string Markdown
  */
 export function generateMarkdown(data: AnchorOpportunity[]): string {
-  const header = `| Origem | Âncora | Destino | Score | Motivo |\n|---|---|---|---|---|`;
+  const header = `| Origem | Âncora | Tipo | Destino | Score | Motivo |\n|---|---|---|---|---|---|`;
   const rows = data.map((r) => {
-    const score = r.score.toFixed(2);
+    const score = r.score?.toFixed(2) || "0.00";
     const reason = r.reason ?? "";
-    return `| ${r.origem} | ${r.anchor} | ${r.destino} | ${score} | ${reason} |`;
+    const type = r.type ?? "exact";
+    return `| ${r.origem} | ${r.anchor} | ${type} | ${r.destino} | ${score} | ${reason} |`;
   });
   return [header, ...rows].join("\n");
 }
 
+/**
+ * Faz download de conteúdo texto (JSON/MD)
+ * @param content conteúdo em texto
+ * @param filename nome do arquivo
+ */
 export function downloadText(content: string, filename: string) {
   if (typeof window === 'undefined') return;
-  
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
   const link = document.createElement("a");
-  
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);

@@ -28,6 +28,10 @@ import {
   Search,
   Layout,
   Globe,
+  ArrowRight,
+  PenTool,
+  PlusCircle,
+  Hash,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -89,13 +93,16 @@ export default function Home() {
       return;
     }
 
-    const urls = urlsInput
+    const rawUrls = urlsInput
       .split("\n")
       .map((u) => u.trim())
       .filter((u) => u.length > 0);
 
+    // Remove duplicates and exclude Pillar URL from satellites list
+    const urls = [...new Set(rawUrls)].filter(u => u !== pillarUrl.trim());
+
     if (urls.length === 0) {
-      addLog("❌ Erro: Nenhuma URL de satélite fornecida.");
+      addLog("❌ Erro: Nenhuma URL de satélite válida fornecida (ou apenas a própria URL pilar).");
       setIsProcessing(false);
       return;
     }
@@ -107,7 +114,11 @@ export default function Home() {
       setIsProcessing(false);
       return;
     }
-    addLog(`🚀 Iniciando processamento de ${urls.length} URLs com foco no pilar...`);
+    
+    // Incluir Pilar na análise para processamento bidirecional
+    const allUrlsToAnalyze = [pillarUrl.trim(), ...urls];
+    
+    addLog(`🚀 Iniciando processamento de ${allUrlsToAnalyze.length} URLs (1 Pilar + ${urls.length} Satélites)...`);
     addLog(`📌 Pilar definido: ${pillarUrl}`);
 
     // Passo 1: Análise
@@ -115,8 +126,8 @@ export default function Home() {
     let completed = 0;
     const batchSize = 3;
 
-    for (let i = 0; i < urls.length; i += batchSize) {
-      const batch = urls.slice(i, i + batchSize);
+    for (let i = 0; i < allUrlsToAnalyze.length; i += batchSize) {
+      const batch = allUrlsToAnalyze.slice(i, i + batchSize);
       await Promise.all(
         batch.map(async (url) => {
           addLog(`🔍 Analisando: ${url}`);
@@ -136,7 +147,7 @@ export default function Home() {
             addLog(`❌ Erro crítico em ${url}: ${error}`);
           } finally {
             completed++;
-            setProgress((completed / (urls.length * 2)) * 100);
+            setProgress((completed / (allUrlsToAnalyze.length * 2)) * 100);
           }
         })
       );
@@ -154,32 +165,64 @@ export default function Home() {
       }
     }
 
-    addLog("🔎 Buscando oportunidades de linkagem interna...");
+    addLog("🔎 Buscando oportunidades de linkagem interna (Bidirecional)...");
 
-    // Passo 2: Encontrar Âncoras
-    const targets = analyzedData.map((d) => ({
-      url: d.url,
-      clusters: d.analysis.clusters,
-    }));
+    // Preparar Targets
+    // Satélites targets (para o Pilar linkar)
+    // GARANTIA: Pilar nunca entra aqui
+    const satelliteTargets = analyzedData
+        .filter(d => d.url !== pillarUrl.trim())
+        .map(d => ({
+            url: d.url,
+            clusters: d.analysis.clusters,
+            theme: d.analysis.theme, // Usar tema para match mais rico
+            intencao: d.analysis.intencao
+        }));
+    
+    // Pilar target (para os Satélites linkarem)
+    const pillarData = analyzedData.find(d => d.url === pillarUrl.trim());
+    const pillarTarget = pillarData ? [{
+        url: pillarData.url,
+        clusters: pillarData.analysis.clusters,
+        theme: pillarData.analysis.theme,
+        intencao: pillarData.analysis.intencao
+    }] : [];
+
+    if (satelliteTargets.length === 0) {
+        addLog("⚠️ Aviso: Nenhum dado de satélite analisado com sucesso. Linkagem ativa (Pilar -> Satélites) não será possível.");
+    }
+    if (pillarTarget.length === 0) {
+        addLog("⚠️ Aviso: Dados do Pilar não encontrados. Linkagem passiva (Satélites -> Pilar) não será possível.");
+    }
 
     const allAnchors: AnchorOpportunity[] = [];
     completed = 0;
 
+    // Processar em lotes
     for (let i = 0; i < analyzedData.length; i += batchSize) {
       const batch = analyzedData.slice(i, i + batchSize);
       await Promise.all(
         batch.map(async (item) => {
-          addLog(`🔗 Processando: ${item.extracted.title}`);
+          const isPillar = item.url === pillarUrl.trim();
+          
+          // Se for Pilar, busca links PARA os satélites (Active Link Building)
+          // Se for Satélite, busca links PARA o pilar (Passive Link Building)
+          const currentTargets = isPillar ? satelliteTargets : pillarTarget;
+          
+          if (currentTargets.length === 0) return;
+
+          addLog(`🔗 Processando ${isPillar ? '[PILAR -> SATÉLITES]' : '[SATÉLITE -> PILAR]'}: ${item.extracted.title}`);
+          
           try {
             const anchors = await processUrlAnchors(
               item.url,
               item.extracted.content,
-              targets,
+              currentTargets,
               maxInlinks,
               item.extracted.rawHtml
             );
             allAnchors.push(...anchors);
-            addLog(`✨ ${anchors.length} inlinks encontrados em ${item.extracted.title}`);
+            addLog(`✨ ${anchors.length} oportunidades em ${item.extracted.title}`);
           } catch (error) {
             addLog(`❌ Erro âncoras ${item.url}: ${error}`);
           } finally {
@@ -192,9 +235,9 @@ export default function Home() {
 
     const editorialWeights: Record<string, number> = {};
     if (pillarUrl) {
-      editorialWeights[pillarUrl] = 1;
+      editorialWeights[pillarUrl.trim()] = 1; // Prioridade editorial para o pilar
     }
-    const ranked = rankAnchors(allAnchors, targets, editorialWeights);
+    const ranked = rankAnchors(allAnchors, satelliteTargets.concat(pillarTarget), editorialWeights);
     setResults(ranked);
     setIsProcessing(false);
     setActiveTab("resultados"); // Auto switch to results on finish
@@ -203,7 +246,7 @@ export default function Home() {
 
   const exportCSV = () => {
     if (results.length === 0) return;
-    downloadCSV(generateCSV(results, pillarUrl));
+    downloadCSV(generateCSV(results, pillarUrl), "inlinks_opportunities.csv");
   };
 
   const exportJSON = () => {
@@ -290,7 +333,7 @@ export default function Home() {
                     }`}
                   />
                   <p className="mt-1 text-xs text-slate-500">
-                    Obrigatório para priorização estratégica de links.
+                    Obrigatório. Será usado como origem E destino.
                   </p>
                 </div>
 
@@ -359,10 +402,10 @@ export default function Home() {
             <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
               <h3 className="text-indigo-900 font-semibold text-sm mb-2 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                Dica Estratégica
+                Active Link Building
               </h3>
               <p className="text-indigo-800 text-xs leading-relaxed">
-                O conteúdo pilar serve como âncora central. As URLs satélites serão analisadas para encontrar oportunidades de linkar de volta para este pilar, fortalecendo sua autoridade.
+                Agora o sistema analisa <strong>bidirecionalmente</strong>: sugere links dos Satélites para o Pilar, e também modificações no Pilar (reescritas/inserções) para apontar para os Satélites.
               </p>
             </div>
           </aside>
@@ -469,26 +512,52 @@ export default function Home() {
                           <table className="w-full text-sm text-left">
                             <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
                               <tr>
-                                <th className="p-4 w-1/4">Origem</th>
-                                <th className="p-4 w-1/4">Âncora & Contexto</th>
-                                <th className="p-4 w-1/4">Destino</th>
+                                <th className="p-4 w-1/4">Origem / Destino</th>
+                                <th className="p-4 w-1/3">Ação Recomendada</th>
                                 <th className="p-4 w-24 text-center">Score</th>
-                                <th className="p-4">Motivo</th>
+                                <th className="p-4">Contexto/Motivo</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                               {results.map((r, i) => (
                                 <tr key={i} className="hover:bg-slate-50 transition-colors">
-                                  <td className="p-4 align-top">
-                                    <div className="text-slate-900 font-medium truncate max-w-[200px]" title={r.origem}>{r.origem}</div>
+                                  <td className="p-4 align-top space-y-2">
+                                    <div className="flex flex-col gap-1">
+                                      <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Origem</div>
+                                      <div className="text-slate-900 font-medium truncate max-w-[200px]" title={r.origem}>{r.origem}</div>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-slate-300 mx-auto rotate-90 my-1" />
+                                    <div className="flex flex-col gap-1">
+                                      <div className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Destino</div>
+                                      <div className="text-indigo-600 truncate max-w-[200px]" title={r.destino}>{r.destino}</div>
+                                    </div>
                                   </td>
+                                  
                                   <td className="p-4 align-top">
-                                    <div className="text-indigo-600 font-bold">{r.anchor}</div>
-                                    <div className="text-xs text-slate-500 mt-1 italic leading-relaxed">"{r.trecho}"</div>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        {r.type === 'exact' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">EXACT</span>}
+                                        {r.type === 'rewrite' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700 border border-yellow-200 flex items-center gap-1"><PenTool className="w-3 h-3"/> REWRITE</span>}
+                                        {r.type === 'insert' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200 flex items-center gap-1"><PlusCircle className="w-3 h-3"/> INSERT</span>}
+                                        
+                                        <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <Hash className="w-3 h-3" />
+                                            {r.target_topic || "Tópico Geral"}
+                                        </span>
+                                    </div>
+
+                                    <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-700 leading-relaxed relative">
+                                        {r.type === 'rewrite' && r.original_text && (
+                                            <div className="mb-2 pb-2 border-b border-slate-200/50 opacity-60 text-xs line-through decoration-red-400">
+                                                {r.original_text}
+                                            </div>
+                                        )}
+                                        <span className="font-semibold text-indigo-700 bg-indigo-50 px-1 rounded">{r.anchor}</span>
+                                        <span className="text-xs text-slate-500 block mt-2 italic">
+                                            "...{r.trecho}..."
+                                        </span>
+                                    </div>
                                   </td>
-                                  <td className="p-4 align-top">
-                                    <div className="text-slate-600 truncate max-w-[200px]" title={r.destino}>{r.destino}</div>
-                                  </td>
+                                  
                                   <td className="p-4 align-top text-center">
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                       r.score > 0.8 ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
@@ -496,8 +565,15 @@ export default function Home() {
                                       {r.score.toFixed(2)}
                                     </span>
                                   </td>
+                                  
                                   <td className="p-4 align-top text-xs text-slate-500">
-                                    {r.reason}
+                                    {r.pillar_context ? (
+                                        <div className="bg-yellow-50 p-2 rounded border border-yellow-100 text-yellow-800">
+                                            <strong>Contexto do Pilar:</strong> {r.pillar_context}
+                                        </div>
+                                    ) : (
+                                        r.reason
+                                    )}
                                   </td>
                                 </tr>
                               ))}
@@ -587,9 +663,10 @@ export default function Home() {
                         {/* Cards de Páginas */}
                         <div className="grid md:grid-cols-2 gap-4">
                           {analysisResults.map((item, i) => (
-                            <div key={i} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                            <div key={i} className={`border rounded-lg p-4 hover:shadow-md transition-shadow bg-white ${item.url === pillarUrl ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-slate-200'}`}>
                               <h3 className="font-medium text-indigo-700 mb-1 line-clamp-1" title={item.extracted.title}>
                                 {item.extracted.title}
+                                {item.url === pillarUrl && <span className="ml-2 text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded uppercase tracking-wider">Pilar</span>}
                               </h3>
                               <div className="text-xs text-slate-400 mb-3 truncate font-mono bg-slate-50 p-1 rounded">
                                 {item.url}
@@ -604,6 +681,12 @@ export default function Home() {
                                   <span className="text-slate-500">Funil</span>
                                   <span className="font-medium text-slate-700">{item.analysis.funil}</span>
                                 </div>
+                                {item.analysis.theme && (
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="text-slate-500">Tema Principal</span>
+                                      <span className="font-medium text-slate-700">{item.analysis.theme}</span>
+                                    </div>
+                                )}
                               </div>
 
                               <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5">

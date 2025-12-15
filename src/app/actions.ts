@@ -115,36 +115,17 @@ export async function detectCannibalization(
 export async function processUrlAnchors(
   currentUrl: string,
   content: string,
-  targets: { url: string; clusters: string[] }[],
+  targets: { url: string; clusters: string[]; theme?: string; intencao?: string }[],
   maxInlinks: number = 5,
   html?: string
 ): Promise<AnchorOpportunity[]> {
   try {
-    // Buscar conteúdo das páginas alvo para verificação de contexto (evitar alucinações)
-    const targetContents: Record<string, string> = {};
-    
-    // Paralelizar a busca de conteúdo dos targets
-    await Promise.all(
-      targets.map(async (target) => {
-        try {
-          // TODO: Implementar cache se necessário para evitar re-fetch
-          const extracted = await extractContent(target.url);
-          if (extracted && extracted.content) {
-            targetContents[target.url] = extracted.content;
-          }
-        } catch (e) {
-          console.warn(`Não foi possível extrair conteúdo do target ${target.url}:`, e);
-        }
-      })
-    );
-
     return await findAnchorOpportunities(
       content,
       html,
       targets,
       currentUrl,
-      maxInlinks,
-      targetContents
+      maxInlinks
     );
   } catch (e) {
     console.error("Erro ao buscar âncoras:", e);

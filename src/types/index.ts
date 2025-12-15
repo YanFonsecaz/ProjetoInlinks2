@@ -15,6 +15,7 @@ export interface Cannibalization {
 }
 
 export interface ContentAnalysis {
+  theme?: string; // Tema Principal
   intencao: string;
   funil: string;
   clusters: string[];
@@ -24,12 +25,15 @@ export interface ContentAnalysis {
 
 export interface AnchorOpportunity {
   anchor: string;
-  trecho: string; // Contexto na origem (Satellite)
-  pillarContext?: string; // Contexto no destino (Pillar) - Opcional pois pode não ser encontrado se não verificado
+  trecho: string;
   origem: string;
   destino: string;
   score: number;
   reason?: string;
+  type?: 'exact' | 'rewrite' | 'insert'; // insert = criar novo conteúdo
+  original_text?: string;
+  pillar_context?: string; // Justificativa do destino
+  target_topic?: string;
 }
 
 export interface ProcessResult {

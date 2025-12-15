@@ -3,6 +3,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { getLLM } from "@/core/llm";
 
 const analysisSchema = z.object({
+  theme: z.string().describe("O tema principal da página em uma frase curta"),
   intencao: z
     .string()
     .describe(
@@ -41,7 +42,7 @@ export async function analyzeContent(
   const prompt = ChatPromptTemplate.fromMessages([
     [
       "system",
-      "Você é um especialista em SEO e análise de conteúdo. Analise o texto fornecido e extraia as informações solicitadas em JSON.",
+      "Você é um especialista em SEO e análise de conteúdo. Analise o texto fornecido e extraia as informações solicitadas em JSON, incluindo o tema principal.",
     ],
     ["user", "Título: {title}\n\nConteúdo:\n{content}"],
   ]);
