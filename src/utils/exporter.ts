@@ -1,8 +1,11 @@
-'use client';
+"use client";
 
 import { AnchorOpportunity } from "@/types";
 
-export function generateCSV(data: AnchorOpportunity[], pillarUrl: string): string {
+export function generateCSV(
+  data: AnchorOpportunity[],
+  pillarUrl: string
+): string {
   if (!data || data.length === 0) return "";
 
   // Helper para sanitizar campos para CSV (aspas duplas escapadas)
@@ -20,8 +23,8 @@ export function generateCSV(data: AnchorOpportunity[], pillarUrl: string): strin
   } catch (e) {
     domain = pillarUrl;
   }
-  
-  const today = new Date().toLocaleDateString('pt-BR');
+
+  const today = new Date().toLocaleDateString("pt-BR");
 
   // Cabeçalho Hierárquico conforme modelo solicitado
   // Adicionando colunas extras solicitadas: Tipo, Score, Frase na Satellite, Frase na Pillar
@@ -38,27 +41,27 @@ export function generateCSV(data: AnchorOpportunity[], pillarUrl: string): strin
     // Linha 6: Vazia
     `"","","","","","","","","","","",""`,
     // Linha 7: Cabeçalho das Oportunidades
-    `"","URL página","","Texto Âncora","Tipo","Score","Instrução/Parágrafo","Frase na Satellite (Onde inserir)","Otimização Implementada","Frase na Pillar (Origem do termo)"`
+    `"","URL Onde Inserir (Origem)","","Texto Âncora","URL Destino (Alvo)","Score","Instrução/Parágrafo","Contexto na Origem","Otimização Implementada","Justificativa"`,
   ];
 
   // Linhas de dados (Oportunidades)
   data.forEach((row, index) => {
     // Instrução + Parágrafo
     const instruction = `Inserir a marcação do hiperlink na âncora sinalizada em negrito:\n\n${row.trecho}`;
-    
+
     const line = [
-      index + 1,                    // A: ID
-      sanitize(row.origem),         // B: URL Origem
-      "",                           // C
-      sanitize(row.anchor),         // D: Âncora
-      sanitize(row.type || "exact"), // E: Tipo
+      index + 1, // A: ID
+      sanitize(row.origem), // B: URL Origem
+      "", // C
+      sanitize(row.anchor), // D: Âncora
+      sanitize(row.destino), // E: URL Destino (Nova coluna explícita)
       sanitize(row.score?.toFixed(2) || "0.00"), // F: Score
-      sanitize(instruction),        // G: Instrução
-      sanitize(row.trecho),         // H: Frase na Satellite
-      "TRUE",                       // I: Status
-      sanitize(row.pillar_context || "N/A") // J: Frase na Pillar
+      sanitize(instruction), // G: Instrução
+      sanitize(row.trecho), // H: Contexto na Origem
+      "TRUE", // I: Status
+      sanitize(row.reason || row.pillar_context || "N/A"), // J: Justificativa
     ].join(",");
-    
+
     lines.push(line);
   });
 
@@ -66,17 +69,20 @@ export function generateCSV(data: AnchorOpportunity[], pillarUrl: string): strin
   return "\uFEFF" + lines.join("\n");
 }
 
-export function downloadCSV(content: string, filename: string = "inlinks_opportunities.csv") {
-  if (typeof window === 'undefined') return;
-  
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+export function downloadCSV(
+  content: string,
+  filename: string = "inlinks_opportunities.csv"
+) {
+  if (typeof window === "undefined") return;
+
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
-  
+
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -114,14 +120,14 @@ export function generateMarkdown(data: AnchorOpportunity[]): string {
  * @param filename nome do arquivo
  */
 export function downloadText(content: string, filename: string) {
-  if (typeof window === 'undefined') return;
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+  if (typeof window === "undefined") return;
+  const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
   const link = document.createElement("a");
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

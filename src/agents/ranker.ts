@@ -1,48 +1,6 @@
 import { AnchorOpportunity } from "@/types";
 
 /**
- * Calcula similaridade semântica simples entre âncora e clusters do destino
- * @param anchor texto da âncora
- * @param clusters lista de tópicos/termos do destino
- * @returns score 0–1
- */
-function semanticSimilarity(anchor: string, clusters: string[]): number {
-  const a = anchor.toLowerCase();
-  const terms = clusters.join(" ").toLowerCase();
-  const aTokens = a.split(/[^a-zA-ZÀ-ÿ0-9]+/).filter(Boolean);
-  const tTokens = terms.split(/[^a-zA-ZÀ-ÿ0-9]+/).filter(Boolean);
-  if (aTokens.length === 0 || tTokens.length === 0) return 0;
-  const setT = new Set(tTokens);
-  let match = 0;
-  for (const tok of aTokens) if (setT.has(tok)) match++;
-  return Math.min(1, match / aTokens.length);
-}
-
-/**
- * Jaccard entre tokens do trecho e tokens de clusters
- * @param snippet trecho textual
- * @param clusters clusters do destino
- * @returns score 0–1
- */
-function jaccard(snippet: string, clusters: string[]): number {
-  const sTokens = snippet
-    .toLowerCase()
-    .split(/[^a-zA-ZÀ-ÿ0-9]+/)
-    .filter(Boolean);
-  const cTokens = clusters
-    .join(" ")
-    .toLowerCase()
-    .split(/[^a-zA-ZÀ-ÿ0-9]+/)
-    .filter(Boolean);
-  const setS = new Set(sTokens);
-  const setC = new Set(cTokens);
-  const inter = [...setS].filter((x) => setC.has(x)).length;
-  const union = new Set([...setS, ...setC]).size;
-  if (union === 0) return 0;
-  return inter / union;
-}
-
-/**
  * Qualidade do snippet baseada em tamanho e legibilidade simples
  * @param snippet trecho textual
  * @returns score 0–1
@@ -74,12 +32,15 @@ export function rankAnchors(
   for (const t of targets) clusterByUrl.set(t.url, t.clusters);
 
   const ranked = anchors.map((a) => {
-    const clusters = clusterByUrl.get(a.destino) || [];
-    const sem = semanticSimilarity(a.anchor, clusters);
-    const jac = jaccard(a.trecho, clusters);
-    const ed = Math.max(0, Math.min(1, editorialWeights?.[a.destino] ?? 0.5));
+    // Use LLM score (High Quality) as primary - 80% weight
+    // Add Snippet Quality check - 20% weight
+    // Ignore naive token similarity in favor of LLM
     const qual = snippetQuality(a.trecho);
-    const final = 0.5 * sem + 0.2 * jac + 0.2 * ed + 0.1 * qual;
+    const final = 0.8 * a.score + 0.2 * qual;
+    
+    // Ensure we don't accidentally lower it too much if quality is weird
+    // but snippetQuality handles basic length checks.
+    
     return { ...a, score: final };
   });
 

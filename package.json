@@ -9,8 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.58",
     "@langchain/core": "^0.3.79",
     "@langchain/openai": "0.5.0",
+    "@supabase/mcp-server-supabase": "^0.5.10",
+    "@supabase/supabase-js": "^2.78.0",
     "cheerio": "^1.0.0-rc.12",
     "clsx": "^2.1.1",
     "csv-stringify": "^6.6.0",

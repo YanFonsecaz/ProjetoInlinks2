@@ -5,11 +5,5 @@
   No need for @tailwind directives anymore.
   Theme variables and custom styles can go here if needed.
 */
-
-:root {
-  /* Default variables can be removed or adapted if needed */
-}
-
-body {
-  /* Let Tailwind utility classes control the body style in layout.tsx */
-}
+/* Default variables can be removed or adapted if needed */
+/* Let Tailwind utility classes control the body style in layout.tsx */

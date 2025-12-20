@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+// Configuração de timeout (60 segundos)
+export const maxDuration = 60;
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
