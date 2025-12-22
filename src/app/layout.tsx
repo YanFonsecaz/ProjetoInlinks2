@@ -10,6 +10,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Inlinks AI Agent",
   description: "Análise de conteúdo e link building automático",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({

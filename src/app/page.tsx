@@ -329,20 +329,57 @@ export default function Home() {
       : "0.00";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-orange-100 selection:text-slate-900">
       {/* Navbar */}
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center gap-3">
-              <div className="bg-indigo-600 p-2 rounded-lg">
-                <LinkIcon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-900 leading-tight">
-                  Inlinks AI
-                </h1>
-                <p className="text-xs text-slate-500">
+              {/* Logo NP Digital */}
+              <div className="flex flex-col justify-center">
+                <svg
+                  width="180"
+                  height="50"
+                  viewBox="0 0 200 60"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-auto"
+                >
+                  {/* Quadrado Laranja */}
+                  <rect
+                    x="2"
+                    y="2"
+                    width="56"
+                    height="56"
+                    stroke="#ff5f29"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  {/* Texto NP */}
+                  <text
+                    x="30"
+                    y="42"
+                    fontFamily="Arial, sans-serif"
+                    fontWeight="bold"
+                    fontSize="28"
+                    fill="#ff5f29"
+                    textAnchor="middle"
+                  >
+                    NP
+                  </text>
+                  {/* Texto digital */}
+                  <text
+                    x="68"
+                    y="42"
+                    fontFamily="Arial, sans-serif"
+                    fontWeight="bold"
+                    fontSize="32"
+                    fill="#000000"
+                  >
+                    digital
+                  </text>
+                </svg>
+                <p className="text-[10px] text-slate-500 mt-1 ml-1">
                   Agente de Link Building Inteligente
                 </p>
               </div>
@@ -353,11 +390,11 @@ export default function Home() {
               <div className="flex items-center gap-3 flex-1 max-w-md mx-8">
                 <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-indigo-600 h-full rounded-full transition-all duration-500 ease-out"
+                    className="bg-[#ff5f29] h-full rounded-full transition-all duration-500 ease-out"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <span className="text-xs font-medium text-indigo-600 w-12 text-right">
+                <span className="text-xs font-medium text-[#ff5f29] w-12 text-right">
                   {Math.round(progress)}%
                 </span>
               </div>
@@ -366,11 +403,11 @@ export default function Home() {
             <div className="flex items-center gap-4">
               <a
                 href="#"
-                className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors"
+                className="text-sm font-medium text-slate-500 hover:text-[#ff5f29] transition-colors"
               >
                 Documentação
               </a>
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#ff5f29] font-bold text-xs">
                 AI
               </div>
             </div>
@@ -401,9 +438,9 @@ export default function Home() {
                     value={pillarUrl}
                     onChange={(e) => setPillarUrl(e.target.value.trim())}
                     placeholder="https://exemplo.com/guia-completo"
-                    className={`w-full p-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-indigo-500 transition-colors ${
+                    className={`w-full p-2.5 rounded-lg border text-sm focus:ring-2 focus:ring-[#ff5f29] transition-colors ${
                       !pillarUrl && !isProcessing
-                        ? "border-indigo-300 bg-indigo-50/50"
+                        ? "border-orange-200 bg-[#fff5f2]/50"
                         : "border-slate-300"
                     }`}
                   />
@@ -423,7 +460,7 @@ export default function Home() {
                     value={urlsInput}
                     onChange={(e) => setUrlsInput(e.target.value)}
                     placeholder="https://exemplo.com/post-1&#10;https://exemplo.com/post-2"
-                    className="w-full h-40 p-3 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none bg-slate-50 hover:bg-white"
+                    className="w-full h-40 p-3 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-[#ff5f29] focus:border-[#ff5f29] transition-all resize-none bg-slate-50 hover:bg-white"
                   />
                 </div>
 
@@ -437,7 +474,7 @@ export default function Home() {
                       onClick={() => setStrategyMode("inlinks")}
                       className={`p-3 rounded-lg border text-sm font-medium transition-all text-left flex items-center gap-3 ${
                         strategyMode === "inlinks"
-                          ? "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-200"
+                          ? "bg-[#fff5f2] border-[#ff5f29] text-[#ff5f29] ring-1 ring-[#ff5f29]"
                           : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -455,7 +492,7 @@ export default function Home() {
                       onClick={() => setStrategyMode("outlinks")}
                       className={`p-3 rounded-lg border text-sm font-medium transition-all text-left flex items-center gap-3 ${
                         strategyMode === "outlinks"
-                          ? "bg-purple-50 border-purple-200 text-purple-700 ring-1 ring-purple-200"
+                          ? "bg-[#fff5f2] border-[#ff5f29] text-[#ff5f29] ring-1 ring-[#ff5f29]"
                           : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -473,7 +510,7 @@ export default function Home() {
                       onClick={() => setStrategyMode("hybrid")}
                       className={`p-3 rounded-lg border text-sm font-medium transition-all text-left flex items-center gap-3 ${
                         strategyMode === "hybrid"
-                          ? "bg-emerald-50 border-emerald-200 text-emerald-700 ring-1 ring-emerald-200"
+                          ? "bg-[#fff5f2] border-[#ff5f29] text-[#ff5f29] ring-1 ring-[#ff5f29]"
                           : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                       }`}
                     >
@@ -494,7 +531,7 @@ export default function Home() {
                 <div className="border-t border-slate-100 pt-2">
                   <button
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className="flex items-center justify-between w-full text-sm text-slate-600 hover:text-indigo-600 py-2 transition-colors"
+                    className="flex items-center justify-between w-full text-sm text-slate-600 hover:text-[#ff5f29] py-2 transition-colors"
                   >
                     <span className="font-medium">Configurações Avançadas</span>
                     {showAdvanced ? (
@@ -515,7 +552,7 @@ export default function Home() {
                           onChange={(e) =>
                             setMaxInlinks(Number(e.target.value))
                           }
-                          className="w-full p-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500"
+                          className="w-full p-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-[#ff5f29]"
                         >
                           {[1, 2, 3, 5, 10, 20].map((n) => (
                             <option key={n} value={n}>
@@ -531,7 +568,7 @@ export default function Home() {
                 <button
                   onClick={handleProcess}
                   disabled={isProcessing || !pillarUrl}
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-sm shadow-indigo-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
+                  className="w-full py-3 bg-[#ff5f29] hover:bg-[#e64e1c] text-white rounded-lg font-medium shadow-sm shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
                 >
                   {isProcessing ? (
                     <>
@@ -548,8 +585,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
-              <h3 className="text-indigo-900 font-semibold text-sm mb-2 flex items-center gap-2">
+            <div className="bg-[#fff5f2] rounded-xl p-4 border border-orange-100">
+              <h3 className="text-slate-900 font-semibold text-sm mb-2 flex items-center gap-2">
                 <Activity className="w-4 h-4" />
                 Modo:{" "}
                 {strategyMode === "inlinks"
@@ -558,7 +595,7 @@ export default function Home() {
                   ? "Outlinks (Cluster)"
                   : "Híbrido (Bidirecional)"}
               </h3>
-              <p className="text-indigo-800 text-xs leading-relaxed">
+              <p className="text-slate-700 text-xs leading-relaxed">
                 {strategyMode === "inlinks" &&
                   "Analisa URLs Satélites buscando oportunidades para linkar PARA a URL Pilar (Fortalece o Pilar)."}
                 {strategyMode === "outlinks" &&
@@ -574,7 +611,7 @@ export default function Home() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
+                <div className="p-3 bg-slate-100 text-slate-600 rounded-lg">
                   <Globe className="w-6 h-6" />
                 </div>
                 <div>
@@ -595,7 +632,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                <div className="p-3 bg-green-100 text-green-600 rounded-lg">
+                <div className="p-3 bg-[#fff5f2] text-[#ff5f29] rounded-lg">
                   <LinkIcon className="w-6 h-6" />
                 </div>
                 <div>
@@ -608,7 +645,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                <div className="p-3 bg-yellow-100 text-yellow-600 rounded-lg">
+                <div className="p-3 bg-orange-50 text-orange-600 rounded-lg">
                   <AlertTriangle className="w-6 h-6" />
                 </div>
                 <div>
@@ -620,7 +657,7 @@ export default function Home() {
               </div>
 
               <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
-                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
+                <div className="p-3 bg-slate-100 text-slate-600 rounded-lg">
                   <Activity className="w-6 h-6" />
                 </div>
                 <div>
@@ -642,7 +679,7 @@ export default function Home() {
                   onClick={() => setActiveTab("resultados")}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                     activeTab === "resultados"
-                      ? "border-indigo-600 text-indigo-600"
+                      ? "border-[#ff5f29] text-[#ff5f29]"
                       : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
                   }`}
                 >
@@ -653,7 +690,7 @@ export default function Home() {
                   onClick={() => setActiveTab("analise")}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                     activeTab === "analise"
-                      ? "border-indigo-600 text-indigo-600"
+                      ? "border-[#ff5f29] text-[#ff5f29]"
                       : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
                   }`}
                 >
@@ -664,7 +701,7 @@ export default function Home() {
                   onClick={() => setActiveTab("logs")}
                   className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${
                     activeTab === "logs"
-                      ? "border-indigo-600 text-indigo-600"
+                      ? "border-[#ff5f29] text-[#ff5f29]"
                       : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
                   }`}
                 >
@@ -727,7 +764,7 @@ export default function Home() {
                                     <td className="p-4 align-top">
                                       <div className="flex flex-col gap-3">
                                         <div className="flex items-start gap-2 group">
-                                          <div className="mt-1 p-1 bg-slate-100 rounded text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                          <div className="mt-1 p-1 bg-slate-100 rounded text-slate-400 group-hover:text-[#ff5f29] transition-colors">
                                             {isOutlink ? (
                                               <ArrowRight className="w-3 h-3" />
                                             ) : (
@@ -742,8 +779,8 @@ export default function Home() {
                                               <span
                                                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                                                   isOutlink
-                                                    ? "bg-purple-100 text-purple-700"
-                                                    : "bg-blue-100 text-blue-700"
+                                                    ? "bg-[#fff5f2] text-[#ff5f29]"
+                                                    : "bg-slate-100 text-slate-600"
                                                 }`}
                                               >
                                                 {isOutlink
@@ -755,7 +792,7 @@ export default function Home() {
                                               href={r.origem}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="text-sm text-slate-600 hover:text-indigo-600 font-medium break-all line-clamp-2 transition-colors"
+                                              className="text-sm text-slate-600 hover:text-[#ff5f29] font-medium break-all line-clamp-2 transition-colors"
                                               title={r.origem}
                                             >
                                               {r.origem}
@@ -764,7 +801,7 @@ export default function Home() {
                                         </div>
 
                                         <div className="flex items-start gap-2 group">
-                                          <div className="mt-1 p-1 bg-slate-100 rounded text-slate-400 group-hover:text-indigo-600 transition-colors">
+                                          <div className="mt-1 p-1 bg-slate-100 rounded text-slate-400 group-hover:text-[#ff5f29] transition-colors">
                                             <LinkIcon className="w-3 h-3" />
                                           </div>
                                           <div className="flex-1 min-w-0">
@@ -775,8 +812,8 @@ export default function Home() {
                                               <span
                                                 className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                                                   !isOutlink
-                                                    ? "bg-purple-100 text-purple-700"
-                                                    : "bg-blue-100 text-blue-700"
+                                                    ? "bg-[#fff5f2] text-[#ff5f29]"
+                                                    : "bg-slate-100 text-slate-600"
                                                 }`}
                                               >
                                                 {!isOutlink
@@ -788,7 +825,7 @@ export default function Home() {
                                               href={r.destino}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="text-sm text-slate-600 hover:text-indigo-600 font-medium break-all line-clamp-2 transition-colors"
+                                              className="text-sm text-slate-600 hover:text-[#ff5f29] font-medium break-all line-clamp-2 transition-colors"
                                             >
                                               {r.destino}
                                             </a>
@@ -800,7 +837,7 @@ export default function Home() {
                                     <td className="p-4 align-top">
                                       <div className="flex items-center gap-2 mb-2">
                                         {r.type === "exact" && (
-                                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200">
+                                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#fff5f2] text-[#ff5f29] border border-[#ff5f29]">
                                             EXACT
                                           </span>
                                         )}
@@ -812,7 +849,7 @@ export default function Home() {
                                       </div>
 
                                       <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-700 leading-relaxed relative">
-                                        <span className="font-semibold text-indigo-700 bg-indigo-50 px-1 rounded">
+                                        <span className="font-semibold text-[#ff5f29] bg-[#fff5f2] px-1 rounded">
                                           {r.anchor}
                                         </span>
                                         <span className="text-xs text-slate-500 block mt-2 italic">
@@ -825,8 +862,8 @@ export default function Home() {
                                       <span
                                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                           r.score > 0.8
-                                            ? "bg-green-100 text-green-800"
-                                            : "bg-yellow-100 text-yellow-800"
+                                            ? "bg-[#fff5f2] text-[#ff5f29]"
+                                            : "bg-slate-100 text-slate-600"
                                         }`}
                                       >
                                         {r.score.toFixed(2)}
@@ -835,7 +872,7 @@ export default function Home() {
 
                                     <td className="p-4 align-top text-xs text-slate-500">
                                       {r.pillar_context ? (
-                                        <div className="bg-yellow-50 p-2 rounded border border-yellow-100 text-yellow-800">
+                                        <div className="bg-orange-50 p-2 rounded border border-orange-100 text-orange-800">
                                           <strong>Contexto do Pilar:</strong>{" "}
                                           {r.pillar_context}
                                         </div>
@@ -879,8 +916,8 @@ export default function Home() {
                       <>
                         {/* Alertas */}
                         {cannibalizationResults.length > 0 && (
-                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <h3 className="font-bold text-yellow-800 flex items-center gap-2 mb-3">
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <h3 className="font-bold text-orange-800 flex items-center gap-2 mb-3">
                               <AlertTriangle className="w-5 h-5" />
                               Conflitos de Conteúdo (Canibalização)
                             </h3>
@@ -888,12 +925,12 @@ export default function Home() {
                               {cannibalizationResults.map((c, i) => (
                                 <div
                                   key={i}
-                                  className="bg-white/50 p-3 rounded border border-yellow-100 text-sm"
+                                  className="bg-white/50 p-3 rounded border border-orange-100 text-sm"
                                 >
-                                  <div className="font-medium text-yellow-900">
+                                  <div className="font-medium text-orange-900">
                                     {c.url}
                                   </div>
-                                  <div className="text-yellow-700 text-xs mt-1">
+                                  <div className="text-orange-700 text-xs mt-1">
                                     Compete com:{" "}
                                     {c.cannibalization.competidores.join(", ")}
                                   </div>
@@ -927,7 +964,7 @@ export default function Home() {
                                       map.pillars.map((p) => (
                                         <span
                                           key={p}
-                                          className="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm font-medium text-indigo-600 shadow-sm"
+                                          className="px-3 py-1 bg-white border border-slate-200 rounded-full text-sm font-medium text-[#ff5f29] shadow-sm"
                                         >
                                           {p}
                                         </span>
@@ -952,7 +989,7 @@ export default function Home() {
                                           </span>
                                           <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1">
                                             <div
-                                              className="bg-indigo-400 h-1.5 rounded-full"
+                                              className="bg-[#ff5f29] h-1.5 rounded-full"
                                               style={{
                                                 width: `${Math.min(
                                                   100,
@@ -981,17 +1018,17 @@ export default function Home() {
                               key={i}
                               className={`border rounded-lg p-4 hover:shadow-md transition-shadow bg-white ${
                                 item.url === pillarUrl
-                                  ? "border-indigo-500 ring-1 ring-indigo-500"
+                                  ? "border-[#ff5f29] ring-1 ring-[#ff5f29]"
                                   : "border-slate-200"
                               }`}
                             >
                               <h3
-                                className="font-medium text-indigo-700 mb-1 line-clamp-1"
+                                className="font-medium text-[#ff5f29] mb-1 line-clamp-1"
                                 title={item.extracted.title}
                               >
                                 {item.extracted.title}
                                 {item.url === pillarUrl && (
-                                  <span className="ml-2 text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                  <span className="ml-2 text-[10px] bg-[#ff5f29] text-white px-1.5 py-0.5 rounded uppercase tracking-wider">
                                     Pilar
                                   </span>
                                 )}
@@ -1066,7 +1103,7 @@ export default function Home() {
                 {/* --- TAB: LOGS --- */}
                 {activeTab === "logs" && (
                   <div className="h-full flex flex-col">
-                    <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-green-400 h-96 overflow-y-auto shadow-inner custom-scrollbar">
+                    <div className="bg-slate-900 rounded-lg p-4 font-mono text-xs text-[#ff5f29] h-96 overflow-y-auto shadow-inner custom-scrollbar">
                       {logs.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-slate-700">
                           <span className="animate-pulse">
@@ -1094,6 +1131,10 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <footer className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-500 border-t border-slate-200 mt-8">
+        <p>Desenvolvido por Yan Fonseca</p>
+      </footer>
     </div>
   );
 }
