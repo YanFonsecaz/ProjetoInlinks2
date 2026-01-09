@@ -27,6 +27,7 @@ import {
   Globe,
   ArrowRight,
   Hash,
+  TrendingUp,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -402,6 +403,13 @@ export default function Home() {
 
             <div className="flex items-center gap-4">
               <a
+                href="/trends-master"
+                className="flex items-center gap-1.5 text-sm font-medium text-[#ff5f29] hover:text-[#e64e1c] transition-colors bg-[#fff5f2] px-3 py-1.5 rounded-lg"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Google Trends
+              </a>
+              <a
                 href="#"
                 className="text-sm font-medium text-slate-500 hover:text-[#ff5f29] transition-colors"
               >
@@ -672,7 +680,7 @@ export default function Home() {
             </div>
 
             {/* Tabs & Content */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[500px] flex flex-col">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 min-h-[32rem] flex flex-col">
               {/* Tab Navigation */}
               <div className="border-b border-slate-200 px-2 flex items-center gap-1">
                 <button

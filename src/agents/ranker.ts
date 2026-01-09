@@ -37,10 +37,10 @@ export function rankAnchors(
     // Ignore naive token similarity in favor of LLM
     const qual = snippetQuality(a.trecho);
     const final = 0.8 * a.score + 0.2 * qual;
-    
+
     // Ensure we don't accidentally lower it too much if quality is weird
     // but snippetQuality handles basic length checks.
-    
+
     return { ...a, score: final };
   });
 

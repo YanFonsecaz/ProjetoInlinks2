@@ -1,0 +1,183 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - link "Voltar" [ref=e7] [cursor=pointer]:
+            - /url: /
+            - img [ref=e8]
+            - generic [ref=e10]: Voltar
+          - generic [ref=e11]:
+            - img [ref=e13]
+            - generic [ref=e16]:
+              - heading "Trends Master" [level=1] [ref=e17]
+              - paragraph [ref=e18]: Monitoramento de Tendências Google
+        - generic [ref=e20]:
+          - img [ref=e21]
+          - generic [ref=e24]: SerpAPI OK
+    - main [ref=e25]:
+      - generic [ref=e26]:
+        - complementary [ref=e27]:
+          - generic [ref=e28]:
+            - heading "Configuração" [level=2] [ref=e29]:
+              - img [ref=e30]
+              - text: Configuração
+            - generic [ref=e33]:
+              - generic [ref=e34]:
+                - generic [ref=e35]: Setor / Categoria
+                - combobox [ref=e36]:
+                  - option "Animais e Pets"
+                  - option "Artes e Entretenimento"
+                  - option "Automóveis e Veículos" [selected]
+                  - option "Beleza e Fitness"
+                  - option "Casa e Jardim"
+                  - option "Ciência"
+                  - option "Comidas e Bebidas"
+                  - option "Compras"
+                  - option "Computadores e Eletrônicos"
+                  - option "Comunidades Online"
+                  - option "Empregos e Educação"
+                  - option "Esportes"
+                  - option "Finanças"
+                  - option "Hobbies e Lazer"
+                  - option "Imóveis"
+                  - option "Inteligência Artificial"
+                  - option "Internet e Telecomunicações"
+                  - option "Jogos"
+                  - option "Lei e Governo"
+                  - option "Livros e Literatura"
+                  - option "Moda"
+                  - option "Negócios e Indústria"
+                  - option "Notícias"
+                  - option "Pessoas e Sociedade"
+                  - option "Referência"
+                  - option "Saúde"
+                  - option "Viagens"
+              - generic [ref=e37]:
+                - generic [ref=e39]:
+                  - img [ref=e40]
+                  - text: Tópicos Personalizados
+                - 'textbox "Ex: financiamento, consórcio, seguro auto" [ref=e43]': inteligência artificial
+                - paragraph [ref=e44]: Separe por vírgula os tópicos que deseja monitorar no Google Trends e News
+              - generic [ref=e45]:
+                - generic [ref=e46]: Períodos de Análise
+                - generic [ref=e47]:
+                  - button "Diário" [ref=e48]
+                  - button "Semanal" [ref=e49]
+                  - button "Mensal" [ref=e50]
+              - generic [ref=e51]:
+                - generic [ref=e52]: Enviar por Email
+                - button [ref=e53]
+              - generic [ref=e55]:
+                - generic [ref=e56]: Destinatários
+                - generic [ref=e57]:
+                  - textbox "email@exemplo.com" [ref=e58]
+                  - button [ref=e59]:
+                    - img [ref=e60]
+                - generic [ref=e62]:
+                  - generic [ref=e63]: yan.fonseca@npbrasil.com
+                  - button [ref=e64]:
+                    - img [ref=e65]
+              - button "Configurações Avançadas" [ref=e69]:
+                - generic [ref=e70]: Configurações Avançadas
+                - img [ref=e71]
+              - generic [ref=e73]:
+                - button "Executar Pipeline" [ref=e74]:
+                  - img [ref=e75]
+                  - text: Executar Pipeline
+                - button "Salvar Configuração" [ref=e77]
+          - link "Abrir Google Trends" [ref=e78] [cursor=pointer]:
+            - /url: https://trends.google.com.br/trends/?geo=BR
+            - img [ref=e79]
+            - text: Abrir Google Trends
+            - img [ref=e81]
+          - generic [ref=e85]:
+            - heading "Sobre o Trends Master" [level=3] [ref=e86]:
+              - img [ref=e87]
+              - text: Sobre o Trends Master
+            - paragraph [ref=e90]: Coleta tendências do Google Trends, busca notícias relacionadas e gera um relatório completo com resumo via IA.
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - button "Visão Geral" [ref=e94]:
+              - img [ref=e95]
+              - text: Visão Geral
+            - button "Relatório Novo" [ref=e98]:
+              - img [ref=e99]
+              - text: Relatório
+              - generic [ref=e102]: Novo
+            - button "Logs" [ref=e103]:
+              - img [ref=e104]
+              - text: Logs
+          - generic [ref=e107]:
+            - generic [ref=e108]:
+              - 'heading "Relatório: Inteligência Artificial" [level=3] [ref=e109]'
+              - button "Download MD" [ref=e110]:
+                - img [ref=e111]
+                - text: Download MD
+            - generic [ref=e115]:
+              - heading "Relatório de Tendências - Inteligência Artificial" [level=1] [ref=e116]
+              - paragraph [ref=e117]:
+                - strong [ref=e118]: "Data:"
+                - text: 09/01/2026
+              - heading "Inteligência Artificial" [level=2] [ref=e119]
+              - heading "Diário" [level=3] [ref=e120]
+              - heading "Inteligência Artificial - Análise (Coleta - 17:12)" [level=4] [ref=e121]
+              - table [ref=e123]:
+                - rowgroup [ref=e124]:
+                  - row "Palavra-chave Tipo Título Fonte Link Data/Hora Dia Resumo" [ref=e125]:
+                    - columnheader "Palavra-chave" [ref=e126]
+                    - columnheader "Tipo" [ref=e127]
+                    - columnheader "Título" [ref=e128]
+                    - columnheader "Fonte" [ref=e129]
+                    - columnheader "Link" [ref=e130]
+                    - columnheader "Data/Hora" [ref=e131]
+                    - columnheader "Dia" [ref=e132]
+                    - columnheader "Resumo" [ref=e133]
+                - rowgroup
+              - blockquote [ref=e134]: Sem dados de tendências retornados para este período.
+              - heading "Semanal" [level=3] [ref=e135]
+              - heading "Inteligência Artificial - Análise (Coleta - 17:12)" [level=4] [ref=e136]
+              - table [ref=e138]:
+                - rowgroup [ref=e139]:
+                  - row "Palavra-chave Tipo Título Fonte Link Data/Hora Dia Resumo" [ref=e140]:
+                    - columnheader "Palavra-chave" [ref=e141]
+                    - columnheader "Tipo" [ref=e142]
+                    - columnheader "Título" [ref=e143]
+                    - columnheader "Fonte" [ref=e144]
+                    - columnheader "Link" [ref=e145]
+                    - columnheader "Data/Hora" [ref=e146]
+                    - columnheader "Dia" [ref=e147]
+                    - columnheader "Resumo" [ref=e148]
+                - rowgroup
+              - blockquote [ref=e149]: Sem dados de tendências retornados para este período.
+              - heading "Mensal" [level=3] [ref=e150]
+              - heading "Inteligência Artificial - Análise (Coleta - 17:12)" [level=4] [ref=e151]
+              - table [ref=e153]:
+                - rowgroup [ref=e154]:
+                  - row "Palavra-chave Tipo Título Fonte Link Data/Hora Dia Resumo" [ref=e155]:
+                    - columnheader "Palavra-chave" [ref=e156]
+                    - columnheader "Tipo" [ref=e157]
+                    - columnheader "Título" [ref=e158]
+                    - columnheader "Fonte" [ref=e159]
+                    - columnheader "Link" [ref=e160]
+                    - columnheader "Data/Hora" [ref=e161]
+                    - columnheader "Dia" [ref=e162]
+                    - columnheader "Resumo" [ref=e163]
+                - rowgroup
+              - blockquote [ref=e164]: Sem dados de tendências retornados para este período.
+              - heading "Resumo Geral" [level=2] [ref=e165]
+              - paragraph [ref=e166]:
+                - strong [ref=e167]: Resumo de Inteligência de Mercado - Setor de Inteligência Artificial
+              - paragraph [ref=e168]: O setor de Inteligência Artificial (IA) continua a crescer rapidamente, impulsionado por inovações em aprendizado de máquina, processamento de linguagem natural e automação. As principais tendências incluem a adoção crescente de IA em setores como saúde, finanças e manufatura, além do aumento da personalização em serviços e produtos. No entanto, riscos como a privacidade de dados, viés algorítmico e regulamentações governamentais emergentes podem impactar o desenvolvimento e a implementação da tecnologia. Oportunidades se apresentam na criação de soluções éticas e transparentes, bem como na capacitação de profissionais para lidar com as novas demandas do mercado.
+              - paragraph [ref=e169]:
+                - strong [ref=e170]: "Fontes:"
+              - paragraph [ref=e171]: "- Relatórios de mercado da Gartner e McKinsey"
+              - paragraph [ref=e172]: "- Artigos da Harvard Business Review sobre IA"
+              - paragraph [ref=e173]: "- Estudos de caso da MIT Technology Review"
+              - paragraph [ref=e174]: "- Notícias do setor em portais como TechCrunch e Wired"
+              - paragraph [ref=e175]: "- Publicações acadêmicas sobre ética em IA"
+  - alert [ref=e176]
+```
