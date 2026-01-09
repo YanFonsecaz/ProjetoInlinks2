@@ -53,9 +53,11 @@ import {
 } from "@/utils/exporter";
 import { rankAnchors } from "@/agents/ranker";
 import { buildClusterMap } from "@/agents/cluster_builder";
+import DocumentationModal from "@/components/DocumentationModal";
 
 export default function Home() {
   // State
+  const [showDocs, setShowDocs] = useState(false);
   const [urlsInput, setUrlsInput] = useState("");
   const [pillarUrl, setPillarUrl] = useState("");
   const [maxInlinks, setMaxInlinks] = useState(3);
@@ -409,12 +411,12 @@ export default function Home() {
                 <TrendingUp className="w-4 h-4" />
                 Google Trends
               </a>
-              <a
-                href="#"
+              <button
+                onClick={() => setShowDocs(true)}
                 className="text-sm font-medium text-slate-500 hover:text-[#ff5f29] transition-colors"
               >
                 Documentação
-              </a>
+              </button>
               <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-[#ff5f29] font-bold text-xs">
                 AI
               </div>
@@ -422,6 +424,8 @@ export default function Home() {
           </div>
         </div>
       </nav>
+
+      <DocumentationModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">

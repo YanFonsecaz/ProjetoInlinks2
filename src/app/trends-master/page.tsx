@@ -121,10 +121,18 @@ export default function TrendsMasterPage() {
           saved.sector = "Automóveis e Veículos";
         }
 
-        setConfig(saved);
-        if (saved.customTopics && saved.customTopics.length > 0) {
-          setCustomTopics(saved.customTopics.join(", "));
-        }
+        // Removendo carregamento automático de email e tópicos personalizados
+        // conforme solicitado pelo usuário, para que o usuário insira manualmente
+        const { emailRecipients, customTopics, ...rest } = saved;
+
+        setConfig((prev) => ({
+          ...prev,
+          ...rest,
+          emailRecipients: [], // Força vazio
+        }));
+        
+        // Garante que tópicos personalizados iniciem vazios
+        setCustomTopics("");
       }
     });
   }, []);

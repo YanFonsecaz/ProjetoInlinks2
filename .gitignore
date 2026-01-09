@@ -43,3 +43,6 @@ next-env.d.ts
 # Explicitly ignored per user request
 .env.local
 .env.example
+
+# Trae IDE
+.trae
