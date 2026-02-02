@@ -18,7 +18,7 @@ const anchorSchema = z.object({
       trecho: z
         .string()
         .describe("A frase completa onde a âncora aparece ou será inserida"),
-      type: z.string().describe("Tipo de oportunidade: 'exact'"),
+      type: z.enum(["exact", "insert"]).describe("Tipo de oportunidade: 'exact' (âncora existente) ou 'insert' (novo parágrafo sugerido)"),
       original_text: z
         .string()
         .nullable()
@@ -186,7 +186,9 @@ export async function findAnchorOpportunities(
     intencao?: string;
   }[],
   originUrl: string,
-  maxInlinks: number = 3
+  maxInlinks: number = 3,
+  mandatoryAnchors: string[] = [],
+  allowInserts: boolean = false
 ): Promise<AnchorOpportunity[]> {
   const limit = Math.floor(Number(maxInlinks)) || 3;
   console.log(
@@ -305,10 +307,13 @@ export async function findAnchorOpportunities(
       3. **Tamanho Ideal**: 1 a 5 palavras. Evite linkar frases inteiras.
 
       ⚠️ REGRAS DE OURO (HARD CONSTRAINTS):
-      - **TIPO PERMITIDO**: Apenas "exact" (A palavra/frase já existe no texto).
-      - **SEM ALUCINAÇÕES**: O texto da âncora deve existir caractere por caractere no original.
-      - **SEM DUPLICIDADE**: Não sugira linkar se já houver um link na mesma frase ou muito próximo.
-      - **IDIOMA**: Analise apenas conteúdo em Português.
+      1. **TIPOS PERMITIDOS**: 
+         - "exact": A palavra/frase já existe no texto.
+         - "insert": Novo parágrafo de 2-3 frases sugerido caso não haja oportunidade natural. (APENAS se solicitado).
+      2. **ÂNCORAS OBRIGATÓRIAS**: Se fornecidas, você DEVE priorizar o uso desses termos exatos se eles existirem no texto.
+      3. **SEM ALUCINAÇÕES (EXACT)**: Para tipo "exact", o texto da âncora deve existir caractere por caractere no original.
+      4. **QUALIDADE EDITORIAL**: A âncora deve ser útil e fazer sentido semântico total com o Pilar de destino.
+      5. **IDIOMA**: Analise apenas conteúdo em Português.
 
       FORMATO DE SAÍDA (JSON):
       Retorne um array de oportunidades conforme o schema, focando nas top {maxInlinks} mais relevantes.`,
@@ -322,6 +327,11 @@ export async function findAnchorOpportunities(
       
       Tópicos Alvo (URLs para linkar):
       {targets}
+
+      ---
+      
+      {mandatory_section}
+      {insert_section}
       
       ---
       
@@ -332,11 +342,21 @@ export async function findAnchorOpportunities(
 
   const chain = prompt.pipe(structuredLLM);
 
+  const mandatory_section = mandatoryAnchors.length > 0 
+    ? `ÂNCORAS OBRIGATÓRIAS (Prioridade Máxima): ${mandatoryAnchors.join(", ")}`
+    : "";
+  
+  const insert_section = allowInserts 
+    ? "MODO INSERÇÃO ATIVADO: Se não encontrar oportunidades 'exact' de alta qualidade, sugira um novo parágrafo (type: 'insert') que contextualize o link."
+    : "APENAS TIPO 'EXACT' PERMITIDO.";
+
   console.log(`[Anchor Selector] Invocando LLM...`);
   try {
     const result = await chain.invoke({
       content: contextToAnalyze,
       targets: targetsDescription,
+      mandatory_section,
+      insert_section,
       // Pedimos um pouco mais para cobrir possíveis rejeições na validação
       maxInlinks: Math.ceil(maxInlinks * 1.5).toString(),
     });
@@ -432,8 +452,18 @@ export async function findAnchorOpportunities(
         // Validação de títulos movida para DOM Validator
 
         opp.trecho = finalTrecho;
+      } else if (type === "insert") {
+        // Para inserção, apenas validamos se o trecho é natural e contém a âncora sugerida
+        if (!opp.trecho.toLowerCase().includes(opp.anchor.toLowerCase())) {
+          console.log(`[Anchor Selector] Rejeitado (Insert sem âncora): ${opp.anchor}`);
+          continue;
+        }
+        if (opp.trecho.length < 50) {
+          console.log(`[Anchor Selector] Rejeitado (Insert muito curto): ${opp.trecho}`);
+          continue;
+        }
       } else {
-        // Qualquer outro tipo (rewrite/insert) que o LLM alucinar será ignorado
+        // Qualquer outro tipo que o LLM alucinar será ignorado
         console.warn(
           `[Anchor Selector] Tipo desconhecido/proibido rejeitado: ${type}`
         );
@@ -488,7 +518,7 @@ export async function findAnchorOpportunities(
           destino: bestTarget.url,
           score: opp.score,
           reason: opp.pillar_context || `Tópico: ${opp.target_topic}`,
-          type: "exact",
+          type: type as "exact" | "insert",
           original_text: opp.original_text ?? undefined,
           pillar_context: opp.pillar_context ?? undefined,
           target_topic: opp.target_topic,
@@ -509,8 +539,10 @@ export async function findAnchorOpportunities(
     }
 
     // 4. VERIFICAÇÃO ANTI-ALUCINAÇÃO (HARD CONSTRAINT)
-    // O trecho PRECISA existir no conteúdo original.
+    // O trecho PRECISA existir no conteúdo original (APENAS para 'exact').
     const validContentOpps = opportunities.filter((o) => {
+      if (o.type === "insert") return true; // Pula check para inserções
+
       // Normalização simples para ignorar diferenças de quebra de linha/espaços múltiplos
       const normalizeForCheck = (s: string) => s.replace(/\s+/g, " ").trim();
       const cleanContent = normalizeForCheck(content);

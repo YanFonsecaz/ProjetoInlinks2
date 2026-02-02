@@ -30,7 +30,7 @@ export interface AnchorOpportunity {
   destino: string;
   score: number;
   reason?: string;
-  type?: "exact"; // Apenas exact permitido
+  type?: "exact" | "insert"; // Permitir insert para novos parágrafos
   original_text?: string;
   pillar_context?: string; // Justificativa do destino
   target_topic?: string;

@@ -201,7 +201,9 @@ export async function processUrlAnchors(
     intencao?: string;
   }[],
   maxInlinks: number = 3,
-  html?: string
+  html?: string,
+  mandatoryAnchors: string[] = [],
+  allowInserts: boolean = false
 ): Promise<AnchorOpportunity[]> {
   try {
     return await findAnchorOpportunities(
@@ -209,7 +211,9 @@ export async function processUrlAnchors(
       html,
       targets,
       currentUrl,
-      maxInlinks
+      maxInlinks,
+      mandatoryAnchors,
+      allowInserts
     );
   } catch (e) {
     console.error("Erro ao buscar âncoras:", e);

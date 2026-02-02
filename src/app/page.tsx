@@ -30,6 +30,7 @@ import {
   ArrowRight,
   Hash,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 
 interface AnalysisResult {
@@ -78,6 +79,8 @@ export default function Home() {
   const [strategyMode, setStrategyMode] = useState<
     "inlinks" | "outlinks" | "hybrid"
   >("inlinks");
+  const [mandatoryAnchors, setMandatoryAnchors] = useState("");
+  const [allowInserts, setAllowInserts] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [hasRun, setHasRun] = useState(false);
   const [totalUrlsSent, setTotalUrlsSent] = useState(0);
@@ -145,7 +148,7 @@ export default function Home() {
     const allChunks: Document[] = [];
     const failedList: string[] = [];
     let completed = 0;
-    const batchSize = 5;
+    const batchSize = 3; // Reduzido para maior estabilidade
 
     for (let i = 0; i < allUrlsToAnalyze.length; i += batchSize) {
       const batch = allUrlsToAnalyze.slice(i, i + batchSize);
@@ -174,8 +177,12 @@ export default function Home() {
             completed++;
             setProgress((completed / (allUrlsToAnalyze.length * 2)) * 100);
           }
-        })
+        }),
       );
+      // Pequeno delay entre lotes para estabilidade
+      if (i + batchSize < allUrlsToAnalyze.length) {
+        await new Promise((r) => setTimeout(r, 800));
+      }
     }
 
     setAnalysisResults(analyzedData);
@@ -188,7 +195,9 @@ export default function Home() {
       if (dbSuccess) {
         addLog("✅ Banco vetorial atualizado.");
       } else {
-        addLog("⚠️ Erro ao salvar vetores. A análise de âncoras pode ser menos precisa.");
+        addLog(
+          "⚠️ Erro ao salvar vetores. A análise de âncoras pode ser menos precisa.",
+        );
       }
     }
     if (analyzedData.length === 0) {
@@ -253,6 +262,11 @@ export default function Home() {
     completed = 0;
 
     // Processar em lotes
+    const mandatoryAnchorsList = mandatoryAnchors
+      .split("\n")
+      .map((a) => a.trim())
+      .filter((a) => a.length > 0);
+
     for (let i = 0; i < analyzedData.length; i += batchSize) {
       const batch = analyzedData.slice(i, i + batchSize);
       await Promise.all(
@@ -291,6 +305,8 @@ export default function Home() {
               currentTargets,
               maxInlinks,
               item.extracted.rawHtml,
+              mandatoryAnchorsList,
+              allowInserts,
             );
             allAnchors.push(...anchors);
             addLog(
@@ -304,6 +320,10 @@ export default function Home() {
           }
         }),
       );
+      // Delay entre lotes de âncoras
+      if (i + batchSize < analyzedData.length) {
+        await new Promise((r) => setTimeout(r, 800));
+      }
     }
 
     const editorialWeights: Record<string, number> = {};
@@ -395,7 +415,22 @@ export default function Home() {
                     value={urlsInput}
                     onChange={(e) => setUrlsInput(e.target.value)}
                     placeholder="https://exemplo.com/post-1&#10;https://exemplo.com/post-2"
-                    className="w-full h-40 p-3 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-[#ff5f29] focus:border-[#ff5f29] transition-all resize-none bg-slate-50 hover:bg-white"
+                    className="w-full h-32 p-3 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-[#ff5f29] focus:border-[#ff5f29] transition-all resize-none bg-slate-50 hover:bg-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Âncoras Obrigatórias{" "}
+                    <span className="text-slate-400 text-xs font-normal">
+                      (Priorizar estes termos)
+                    </span>
+                  </label>
+                  <textarea
+                    value={mandatoryAnchors}
+                    onChange={(e) => setMandatoryAnchors(e.target.value)}
+                    placeholder="termo 1&#10;termo 2"
+                    className="w-full h-24 p-3 rounded-lg border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-[#ff5f29] focus:border-[#ff5f29] transition-all resize-none bg-slate-50 hover:bg-white"
                   />
                 </div>
 
@@ -495,6 +530,24 @@ export default function Home() {
                             </option>
                           ))}
                         </select>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-slate-700">
+                          Sugerir novos trechos (Insert Mode)
+                        </label>
+                        <button
+                          onClick={() => setAllowInserts(!allowInserts)}
+                          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            allowInserts ? "bg-[#ff5f29]" : "bg-slate-200"
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              allowInserts ? "translate-x-5" : "translate-x-0"
+                            }`}
+                          />
+                        </button>
                       </div>
                     </div>
                   )}
@@ -776,6 +829,11 @@ export default function Home() {
                                             EXACT
                                           </span>
                                         )}
+                                        {r.type === "insert" && (
+                                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-600">
+                                            INSERT (NEW)
+                                          </span>
+                                        )}
 
                                         <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1">
                                           <Hash className="w-3 h-3" />
@@ -783,13 +841,50 @@ export default function Home() {
                                         </span>
                                       </div>
 
-                                      <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 text-slate-700 leading-relaxed relative">
-                                        <span className="font-semibold text-[#ff5f29] bg-[#fff5f2] px-1 rounded">
-                                          {r.anchor}
-                                        </span>
-                                        <span className="text-xs text-slate-500 block mt-2 italic">
-                                          "...{r.trecho}..."
-                                        </span>
+                                      <div
+                                        className={`p-3 rounded-lg border text-slate-700 leading-relaxed relative ${
+                                          r.type === "insert"
+                                            ? "bg-blue-50 border-blue-100"
+                                            : "bg-slate-50 border-slate-100"
+                                        }`}
+                                      >
+                                        {r.type === "insert" ? (
+                                          <div className="text-sm">
+                                            <p className="font-bold text-blue-800 mb-2 flex items-center gap-2">
+                                              <Plus className="w-4 h-4" />
+                                              Trecho Sugerido para Inserção:
+                                            </p>
+                                            {r.trecho
+                                              .split(
+                                                new RegExp(
+                                                  `(${r.anchor})`,
+                                                  "gi",
+                                                ),
+                                              )
+                                              .map((part, idx) =>
+                                                part.toLowerCase() ===
+                                                r.anchor.toLowerCase() ? (
+                                                  <span
+                                                    key={idx}
+                                                    className="font-bold text-[#ff5f29] bg-white px-1 rounded shadow-sm border border-orange-100"
+                                                  >
+                                                    {part}
+                                                  </span>
+                                                ) : (
+                                                  part
+                                                ),
+                                              )}
+                                          </div>
+                                        ) : (
+                                          <>
+                                            <span className="font-semibold text-[#ff5f29] bg-[#fff5f2] px-1 rounded">
+                                              {r.anchor}
+                                            </span>
+                                            <span className="text-xs text-slate-500 block mt-2 italic">
+                                              "...{r.trecho}..."
+                                            </span>
+                                          </>
+                                        )}
                                       </div>
                                     </td>
 
