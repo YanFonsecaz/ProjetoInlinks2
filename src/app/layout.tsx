@@ -7,6 +7,8 @@ export const maxDuration = 60;
 
 const inter = Inter({ subsets: ["latin"] });
 
+import Navbar from "@/components/Navbar";
+
 export const metadata: Metadata = {
   title: "Inlinks AI Agent",
   description: "Análise de conteúdo e link building automático",
@@ -23,7 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }

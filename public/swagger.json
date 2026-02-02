@@ -1,0 +1,125 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Inlinks AI Agent API",
+    "version": "1.0.0",
+    "description": "API para integração com o agente de IA e configuração de persona da marca."
+  },
+  "paths": {
+    "/api/persona": {
+      "post": {
+        "summary": "Configura a persona da marca",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PersonaInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonaResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro de Validação"
+          },
+          "401": {
+            "description": "Não Autorizado"
+          },
+          "429": {
+            "description": "Rate Limit Excedido"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "PersonaInput": {
+        "type": "object",
+        "required": [
+          "tipo_de_tom",
+          "nome_da_marca",
+          "publico_alvo",
+          "objetivos_de_comunicação"
+        ],
+        "properties": {
+          "tipo_de_tom": {
+            "type": "string",
+            "enum": [
+              "corporativo",
+              "divertido",
+              "técnico",
+              "inspiracional",
+              "analise_automatica"
+            ]
+          },
+          "texto_referencia": {
+            "type": "string"
+          },
+          "nome_da_marca": {
+            "type": "string"
+          },
+          "publico_alvo": {
+            "type": "object",
+            "properties": {
+              "faixa_etaria": {
+                "type": "string"
+              },
+              "segmento": {
+                "type": "string"
+              }
+            }
+          },
+          "objetivos_de_comunicação": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PersonaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status_processamento": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "processing",
+              "failed"
+            ]
+          },
+          "tempo_estimado_analise": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

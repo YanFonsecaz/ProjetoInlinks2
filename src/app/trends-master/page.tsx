@@ -15,19 +15,15 @@ import {
   TrendingUp,
   Newspaper,
   Mail,
-  CheckCircle2,
-  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Plus,
   X,
-  ArrowLeft,
   FileText,
   ExternalLink,
   HelpCircle,
   Search,
 } from "lucide-react";
-import Link from "next/link";
 import {
   runTrendsPipeline,
   loadTrendsConfig,
@@ -102,12 +98,12 @@ export default function TrendsMasterPage() {
   const [logs, setLogs] = useState<string[]>([]);
   const [report, setReport] = useState<TrendsReport | null>(null);
   const [activeTab, setActiveTab] = useState<"config" | "report" | "logs">(
-    "config"
+    "config",
   );
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [serpApiStatus, setSerpApiStatus] = useState<"idle" | "ok" | "error">(
-    "idle"
+    "idle",
   );
   const [progress, setProgress] = useState(0);
 
@@ -130,7 +126,7 @@ export default function TrendsMasterPage() {
           ...rest,
           emailRecipients: [], // Força vazio
         }));
-        
+
         // Garante que tópicos personalizados iniciem vazios
         setCustomTopics("");
       }
@@ -209,7 +205,7 @@ export default function TrendsMasterPage() {
       addLog(
         `🔍 Tópicos personalizados (${
           effectiveConfig.customTopics.length
-        }): ${effectiveConfig.customTopics.join(", ")}`
+        }): ${effectiveConfig.customTopics.join(", ")}`,
       );
     }
 
@@ -226,7 +222,7 @@ export default function TrendsMasterPage() {
       // Verificação de segurança para evitar erro crítico em caso de timeout
       if (!result) {
         throw new Error(
-          "O servidor não retornou uma resposta válida. Isso geralmente ocorre por Timeout (limite de 5 minutos excedido). Tente reduzir o número de tópicos ou períodos."
+          "O servidor não retornou uma resposta válida. Isso geralmente ocorre por Timeout (limite de 5 minutos excedido). Tente reduzir o número de tópicos ou períodos.",
         );
       }
 
@@ -240,7 +236,9 @@ export default function TrendsMasterPage() {
       }
     } catch (error) {
       clearInterval(progressInterval);
-      addLog(`❌ Erro crítico: ${error instanceof Error ? error.message : error}`);
+      addLog(
+        `❌ Erro crítico: ${error instanceof Error ? error.message : error}`,
+      );
     } finally {
       setIsRunning(false);
     }
@@ -280,70 +278,6 @@ export default function TrendsMasterPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      {/* Navbar */}
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center gap-4">
-              {/* Voltar para Home */}
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-slate-500 hover:text-[#ff5f29] transition-colors"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span className="text-sm font-medium">Voltar</span>
-              </Link>
-
-              {/* Logo */}
-              <div className="flex items-center gap-2">
-                <div className="p-2 bg-[#fff5f2] rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-[#ff5f29]" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-slate-900">
-                    Trends Master
-                  </h1>
-                  <p className="text-[10px] text-slate-500">
-                    Monitoramento de Tendências Google
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress */}
-            {isRunning && (
-              <div className="flex items-center gap-3 flex-1 max-w-md mx-8">
-                <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-[#ff5f29] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className="text-xs font-medium text-[#ff5f29] w-12 text-right">
-                  {Math.round(progress)}%
-                </span>
-              </div>
-            )}
-
-            {/* SerpAPI Status */}
-            <div className="flex items-center gap-2">
-              {serpApiStatus === "ok" && (
-                <div className="flex items-center gap-1 text-green-600 text-xs">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>SerpAPI OK</span>
-                </div>
-              )}
-              {serpApiStatus === "error" && (
-                <div className="flex items-center gap-1 text-red-500 text-xs">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span>SerpAPI Error</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar - Configuração */}
@@ -797,7 +731,7 @@ export default function TrendsMasterPage() {
                             className="text-sm text-slate-700"
                             dangerouslySetInnerHTML={{
                               __html: convertMarkdownToHtmlFragment(
-                                report.markdown
+                                report.markdown,
                               ),
                             }}
                           />
