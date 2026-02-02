@@ -17,11 +17,11 @@ function getPeriodDateParam(periodo: TrendsPeriod): string {
     case "diario":
       return "now 1-d";
     case "semanal":
-      return "today 7-d";
+      return "now 7-d";
     case "mensal":
-      return "today 30-d";
+      return "now 30-d";
     default:
-      return "today 30-d";
+      return "now 30-d";
   }
 }
 
@@ -39,30 +39,27 @@ async function collectTrendingNow(
 ): Promise<TrendItem[]> {
   const data = await fetchSerpApi({
     engine: "google_trends_trending_now",
-    frequency: "daily",
     geo: "BR",
     hl: "pt",
   });
 
   const results: TrendItem[] = [];
-  const dailySearches = data.daily_searches?.[0]?.searches || [];
+  const trendingSearches = data.trending_searches || [];
 
   // Filtra por termos da categoria (Lógica mais rigorosa + IA)
   const normalizedCat = category.toLowerCase().trim();
   const catTerms = normalizedCat.split(" ").filter((w) => w.length > 2);
 
   // 1. Pré-filtro: Aceita qualquer coisa que tenha pelo menos UMA palavra da categoria
-  // Isso reduz o volume para o LLM, eliminando coisas totalmente nada a ver
-  const candidates = dailySearches.filter((s: { query: string }) => {
+  const candidates = trendingSearches.filter((s: { query: string }) => {
     const query = (s.query || "").toLowerCase();
     return catTerms.some((term) => query.includes(term));
   });
 
   // 2. Validação Semântica via IA (Paralela)
-  // Limita a 15 candidatos para não gastar muito
   const validatedPromises = candidates
     .slice(0, 15)
-    .map(async (item: { query: string; traffic?: string }) => {
+    .map(async (item: { query: string; search_volume?: number }) => {
       const isValid = await validateTrendRelevance(item.query, category);
       return isValid ? item : null;
     });
@@ -75,7 +72,7 @@ async function collectTrendingNow(
   const finalItems =
     validatedItems.length > 0
       ? validatedItems
-      : dailySearches.filter((s: { query: string }) => {
+      : trendingSearches.filter((s: { query: string }) => {
           const query = (s.query || "").toLowerCase();
           if (catTerms.length > 1)
             return catTerms.every((term) => query.includes(term));
@@ -86,7 +83,7 @@ async function collectTrendingNow(
     results.push({
       keyword: item.query,
       type: "top",
-      score: item.traffic,
+      score: item.search_volume?.toString(),
     });
   }
 

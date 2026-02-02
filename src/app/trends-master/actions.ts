@@ -40,25 +40,28 @@ export async function runTrendsPipeline(
     const periodsData: PeriodData[] = [];
     const allNews: NewsResult[] = [];
 
-    // Processa cada período configurado
-    for (const periodo of config.periods) {
-      console.log(`[Trends Pipeline] Processando período: ${periodo}`);
+    // Processamento Paralelo: Períodos e Tópicos Personalizados
+    const startTime = performance.now();
+    console.log("[Trends Pipeline] Iniciando processamento paralelo...");
 
-      // 1. Coleta tendências
-      // 1. Coleta tendências
+    // 1. Cria promises para cada período
+    const periodsPromises = config.periods.map(async (periodo) => {
+      console.log(`[Trends Pipeline] Iniciando período: ${periodo}`);
+      
+      // Coleta tendências
       const trends = await collectTrends(
         config.sector,
         periodo,
         config.topN,
         config.risingN,
-        config.customTopics // Passa tópicos personalizados
+        config.customTopics
       );
+      
       console.log(
         `[Trends Pipeline] ${trends.length} tendências coletadas para ${periodo}`
       );
 
-      // 2. Extrai keywords das tendências
-      // Adiciona também os próprios tópicos personalizados como keywords garantidas
+      // Extrai keywords
       const keywords = trends
         .map((t) => t.keyword)
         .filter((k): k is string => !!k);
@@ -66,58 +69,78 @@ export async function runTrendsPipeline(
       if (config.customTopics) {
         for (const topic of config.customTopics) {
           if (!keywords.includes(topic)) {
-            keywords.unshift(topic); // Adiciona no início
+            keywords.unshift(topic);
           }
         }
       }
 
-      // 3. Busca notícias para cada keyword
+      // Busca notícias
       const news = await fetchNews(keywords, config.maxArticles, periodo);
       console.log(
-        `[Trends Pipeline] Notícias coletadas para ${news.length} keywords`
+        `[Trends Pipeline] Notícias coletadas para ${periodo} (${news.length} artigos)`
       );
 
-      allNews.push(...news);
-
-      periodsData.push({
+      return {
         label: PERIOD_LABELS[periodo],
         periodo,
         trends,
-        news: news,
-      });
-    }
+        news,
+      };
+    });
 
-    // 4.1 Busca notícias de Tópicos Personalizados (se houver)
+    // 2. Cria promise para Tópicos Personalizados (se houver)
+    let customTopicsPromise: Promise<PeriodData | null> = Promise.resolve(null);
+
     if (config.customTopics && config.customTopics.length > 0) {
       console.log(
-        `[Trends Pipeline] Buscando notícias para ${config.customTopics.length} tópicos personalizados...`
+        `[Trends Pipeline] Iniciando busca paralela para ${config.customTopics.length} tópicos personalizados...`
       );
-
-      const customNews = await fetchNews(
-        config.customTopics,
-        config.maxArticles,
-        "mensal"
-      ); // Usa período mensal como base ou o mais abrangente
-
-      if (customNews.length > 0) {
-        console.log(
-          `[Trends Pipeline] Encontradas notícias para tópicos personalizados`
+      
+      customTopicsPromise = (async () => {
+        const customNews = await fetchNews(
+          config.customTopics!,
+          config.maxArticles,
+          "mensal"
         );
-        allNews.push(...customNews);
 
-        // Adiciona um "período" extra no relatório apenas para exibir os tópicos personalizados, ou injeta no primeiro período
-        // Vamos injetar como um PeriodData especial
-        periodsData.push({
-          label: "Tópicos Personalizados",
-          periodo: "mensal", // Dummy
-          trends: config.customTopics.map((t) => ({
-            keyword: t,
-            type: "rising",
-          })),
-          news: customNews,
-        });
-      }
+        if (customNews.length > 0) {
+          console.log(
+            `[Trends Pipeline] Encontradas ${customNews.length} notícias para tópicos personalizados`
+          );
+          return {
+            label: "Tópicos Personalizados",
+            periodo: "mensal" as TrendsPeriod, // Cast seguro pois é dummy
+            trends: config.customTopics!.map((t) => ({
+              keyword: t,
+              type: "rising",
+            })),
+            news: customNews,
+          };
+        }
+        return null;
+      })();
     }
+
+    // 3. Aguarda todas as promises (Períodos + Tópicos)
+    const [periodsResults, customTopicsResult] = await Promise.all([
+      Promise.all(periodsPromises),
+      customTopicsPromise
+    ]);
+
+    // 4. Agrega resultados
+    periodsData.push(...periodsResults);
+    
+    // Agrega notícias dos períodos
+    periodsResults.forEach(p => allNews.push(...p.news));
+
+    // Agrega notícias dos tópicos personalizados
+    if (customTopicsResult) {
+      allNews.push(...customTopicsResult.news);
+      periodsData.push(customTopicsResult);
+    }
+
+    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+    console.log(`[Trends Pipeline] Processamento paralelo concluído em ${duration}s`);
 
     // 5. Gera resumo com LLM
     console.log("[Trends Pipeline] Gerando resumo com LLM...");

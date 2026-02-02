@@ -5,9 +5,11 @@ import {
   detectCannibalization,
   processUrlAnalysis,
   processUrlAnchors,
+  batchAddVectors,
 } from "./actions";
 import { AnchorOpportunity, ContentAnalysis, ExtractedContent } from "@/types";
 import { normalizeUrlForComparison } from "@/utils/url-normalizer";
+import { Document } from "@langchain/core/documents";
 import {
   Loader2,
   Download,
@@ -34,6 +36,7 @@ interface AnalysisResult {
   url: string;
   extracted: ExtractedContent;
   analysis: ContentAnalysis;
+  chunks: Document[];
 }
 
 interface CannibalizationResult {
@@ -70,7 +73,7 @@ export default function Home() {
   >([]);
   const [progress, setProgress] = useState(0);
   const [activeTab, setActiveTab] = useState<"resultados" | "analise" | "logs">(
-    "resultados"
+    "resultados",
   );
   const [strategyMode, setStrategyMode] = useState<
     "inlinks" | "outlinks" | "hybrid"
@@ -96,7 +99,7 @@ export default function Home() {
     // Validations
     if (!pillarUrl.trim()) {
       addLog(
-        "❌ Erro: URL do Conteúdo Pilar é obrigatória para análise estratégica."
+        "❌ Erro: URL do Conteúdo Pilar é obrigatória para análise estratégica.",
       );
       setIsProcessing(false);
       return;
@@ -112,7 +115,7 @@ export default function Home() {
 
     if (urls.length === 0) {
       addLog(
-        "❌ Erro: Nenhuma URL de satélite válida fornecida (ou apenas a própria URL pilar)."
+        "❌ Erro: Nenhuma URL de satélite válida fornecida (ou apenas a própria URL pilar).",
       );
       setIsProcessing(false);
       return;
@@ -121,7 +124,7 @@ export default function Home() {
     const MAX_URLS = 100;
     if (urls.length > MAX_URLS) {
       addLog(
-        `❌ Erro: Limite de ${MAX_URLS} URLs excedido (você inseriu ${urls.length}).`
+        `❌ Erro: Limite de ${MAX_URLS} URLs excedido (você inseriu ${urls.length}).`,
       );
       addLog("ℹ️ Para evitar timeouts no servidor, processe em lotes menores.");
       setIsProcessing(false);
@@ -133,12 +136,13 @@ export default function Home() {
     setTotalUrlsSent(allUrlsToAnalyze.length);
 
     addLog(
-      `🚀 Iniciando processamento de ${allUrlsToAnalyze.length} URLs (1 Pilar + ${urls.length} Satélites)...`
+      `🚀 Iniciando processamento de ${allUrlsToAnalyze.length} URLs (1 Pilar + ${urls.length} Satélites)...`,
     );
     addLog(`📌 Pilar definido: ${pillarUrl}`);
 
     // Passo 1: Análise
     const analyzedData: AnalysisResult[] = [];
+    const allChunks: Document[] = [];
     const failedList: string[] = [];
     let completed = 0;
     const batchSize = 5;
@@ -155,7 +159,9 @@ export default function Home() {
                 url,
                 extracted: res.extracted,
                 analysis: res.analysis,
+                chunks: res.chunks,
               });
+              allChunks.push(...res.chunks);
               addLog(`✅ Sucesso: ${res.extracted.title}`);
             } else {
               addLog(`❌ Falha: ${url}`);
@@ -174,9 +180,20 @@ export default function Home() {
 
     setAnalysisResults(analyzedData);
     setFailedUrls(failedList);
+
+    // Passo 1.5: Inserção em Lote no Banco Vetorial
+    if (allChunks.length > 0) {
+      addLog(`💾 Salvando ${allChunks.length} vetores no banco de dados...`);
+      const dbSuccess = await batchAddVectors(allChunks);
+      if (dbSuccess) {
+        addLog("✅ Banco vetorial atualizado.");
+      } else {
+        addLog("⚠️ Erro ao salvar vetores. A análise de âncoras pode ser menos precisa.");
+      }
+    }
     if (analyzedData.length === 0) {
       addLog(
-        "❌ Nenhuma URL pôde ser processada com sucesso. Verifique se as URLs retornam status 200 e não bloqueiam o crawler."
+        "❌ Nenhuma URL pôde ser processada com sucesso. Verifique se as URLs retornam status 200 e não bloqueiam o crawler.",
       );
     }
 
@@ -208,7 +225,7 @@ export default function Home() {
     const pillarData = analyzedData.find(
       (d) =>
         normalizeUrlForComparison(d.url) ===
-        normalizeUrlForComparison(pillarUrl)
+        normalizeUrlForComparison(pillarUrl),
     );
     const pillarTarget = pillarData
       ? [
@@ -223,12 +240,12 @@ export default function Home() {
 
     if (satelliteTargets.length === 0) {
       addLog(
-        "⚠️ Aviso: Nenhum dado de satélite analisado com sucesso. Linkagem ativa (Pilar -> Satélites) não será possível."
+        "⚠️ Aviso: Nenhum dado de satélite analisado com sucesso. Linkagem ativa (Pilar -> Satélites) não será possível.",
       );
     }
     if (pillarTarget.length === 0) {
       addLog(
-        "⚠️ Aviso: Dados do Pilar não encontrados. Linkagem passiva (Satélites -> Pilar) não será possível."
+        "⚠️ Aviso: Dados do Pilar não encontrados. Linkagem passiva (Satélites -> Pilar) não será possível.",
       );
     }
 
@@ -264,7 +281,7 @@ export default function Home() {
           addLog(
             `🔗 Processando ${
               isPillar ? "[PILAR -> SATÉLITES]" : "[SATÉLITE -> PILAR]"
-            }: ${item.extracted.title}`
+            }: ${item.extracted.title}`,
           );
 
           try {
@@ -273,11 +290,11 @@ export default function Home() {
               item.extracted.content,
               currentTargets,
               maxInlinks,
-              item.extracted.rawHtml
+              item.extracted.rawHtml,
             );
             allAnchors.push(...anchors);
             addLog(
-              `✨ ${anchors.length} oportunidades em ${item.extracted.title}`
+              `✨ ${anchors.length} oportunidades em ${item.extracted.title}`,
             );
           } catch (error) {
             addLog(`❌ Erro âncoras ${item.url}: ${error}`);
@@ -285,7 +302,7 @@ export default function Home() {
             completed++;
             setProgress(50 + (completed / analyzedData.length) * 50);
           }
-        })
+        }),
       );
     }
 
@@ -296,7 +313,7 @@ export default function Home() {
     const ranked = rankAnchors(
       allAnchors,
       satelliteTargets.concat(pillarTarget),
-      editorialWeights
+      editorialWeights,
     );
     setResults(ranked);
     setIsProcessing(false);
@@ -425,7 +442,10 @@ export default function Home() {
         </div>
       </nav>
 
-      <DocumentationModal isOpen={showDocs} onClose={() => setShowDocs(false)} />
+      <DocumentationModal
+        isOpen={showDocs}
+        onClose={() => setShowDocs(false)}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -604,8 +624,8 @@ export default function Home() {
                 {strategyMode === "inlinks"
                   ? "Inlinks (Padrão)"
                   : strategyMode === "outlinks"
-                  ? "Outlinks (Cluster)"
-                  : "Híbrido (Bidirecional)"}
+                    ? "Outlinks (Cluster)"
+                    : "Híbrido (Bidirecional)"}
               </h3>
               <p className="text-slate-700 text-xs leading-relaxed">
                 {strategyMode === "inlinks" &&
@@ -906,15 +926,15 @@ export default function Home() {
                           {!hasRun
                             ? "Nenhum resultado ainda"
                             : analysisResults.length === 0
-                            ? "Nenhuma URL pôde ser processada"
-                            : "Nenhuma oportunidade encontrada"}
+                              ? "Nenhuma URL pôde ser processada"
+                              : "Nenhuma oportunidade encontrada"}
                         </p>
                         <p className="text-sm">
                           {!hasRun
                             ? "Inicie uma análise para ver as oportunidades de linkagem."
                             : analysisResults.length === 0
-                            ? "Verifique se as URLs retornam status 200, não exigem login e não bloqueiam o crawler. Veja a aba Logs para detalhes."
-                            : "As páginas foram analisadas, mas não encontramos oportunidades de linkagem interna com os critérios atuais."}
+                              ? "Verifique se as URLs retornam status 200, não exigem login e não bloqueiam o crawler. Veja a aba Logs para detalhes."
+                              : "As páginas foram analisadas, mas não encontramos oportunidades de linkagem interna com os critérios atuais."}
                         </p>
                       </div>
                     )}
@@ -958,7 +978,7 @@ export default function Home() {
                             analysisResults.map((d) => ({
                               url: d.url,
                               analysis: d.analysis,
-                            }))
+                            })),
                           );
                           return (
                             <div className="bg-slate-50 border border-slate-200 rounded-lg p-6">
@@ -1005,7 +1025,7 @@ export default function Home() {
                                               style={{
                                                 width: `${Math.min(
                                                   100,
-                                                  urls.length * 20
+                                                  urls.length * 20,
                                                 )}%`,
                                               }}
                                             ></div>
@@ -1014,7 +1034,7 @@ export default function Home() {
                                             {urls.length} páginas
                                           </div>
                                         </div>
-                                      )
+                                      ),
                                     )}
                                   </div>
                                 </div>

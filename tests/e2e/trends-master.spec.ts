@@ -19,11 +19,11 @@ test('Trends Master Pipeline Execution', async ({ page }) => {
   await runButton.click();
 
   // 5. Wait for completion
-  test.setTimeout(120000); // 2 minutes
+  test.setTimeout(180000); // 3 minutes
   
   // Wait for success message in logs
   // Note: The logs might be in a scrollable container.
-  await expect(page.getByText('Pipeline concluída com sucesso!')).toBeVisible({ timeout: 90000 });
+  await expect(page.getByText('Pipeline concluída com sucesso!')).toBeVisible({ timeout: 150000 });
   
   // 6. Verify Report
   await page.getByRole('button', { name: 'Relatório' }).click();

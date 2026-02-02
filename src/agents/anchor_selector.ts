@@ -232,32 +232,33 @@ export async function findAnchorOpportunities(
     const introDocs = await introParams.createDocuments([contentToUse]); // Usa contentToUse
     if (introDocs.length > 0) relevantDocs.add(introDocs[0].pageContent);
 
-    // 2. Buscar chunks relevantes para cada target
+    // 2. Buscar chunks relevantes para cada target em paralelo
     const store = getVectorStore();
-
-    // Limitar a 3 targets para não estourar tokens se houver muitos
     const mainTargets = targets.slice(0, 3);
+    const normalizedOrigin = normalizeUrlForMetadata(originUrl);
 
-    for (const t of mainTargets) {
-      // Buscar pelo cluster principal ou tema
+    const ragPromises = mainTargets.map(async (t) => {
       const query = t.clusters[0] || t.theme || t.url;
-      console.log(`[RAG] Buscando contexto para: "${query}"`);
+      console.log(`[RAG] Buscando contexto paralelo para: "${query}"`);
+      
+      try {
+        const results = await store.similaritySearch(query, 2, {
+          url: normalizedOrigin,
+        });
+        return results;
+      } catch (err) {
+        console.error(`[RAG] Erro ao buscar contexto para "${query}":`, err);
+        return [];
+      }
+    });
 
-      // Filtra por URL de origem para não pegar texto de outras páginas
-      // Nota: SupabaseVectorStore usa metadata filter
-      // IMPORTANTE: Normalizar URL igual ao que foi salvo em actions.ts
-      const normalizedOrigin = normalizeUrlForMetadata(originUrl);
-      const results = await store.similaritySearch(query, 2, {
-        url: normalizedOrigin,
-      });
-
-      results.forEach((doc: Document) => {
-        if (doc.pageContent.length > 50) {
-          // Ignorar pedaços muito pequenos
-          relevantDocs.add(doc.pageContent);
-        }
-      });
-    }
+    const allRagResults = await Promise.all(ragPromises);
+    
+    allRagResults.flat().forEach((doc: Document) => {
+      if (doc.pageContent.length > 50) {
+        relevantDocs.add(doc.pageContent);
+      }
+    });
 
     if (relevantDocs.size === 0) {
       console.log(

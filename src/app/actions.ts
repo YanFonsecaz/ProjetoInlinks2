@@ -18,7 +18,11 @@ import {
 // Passo 1: Extrair e Analisar
 export async function processUrlAnalysis(
   url: string
-): Promise<{ extracted: ExtractedContent; analysis: ContentAnalysis } | null> {
+): Promise<{ 
+  extracted: ExtractedContent; 
+  analysis: ContentAnalysis;
+  chunks: Document[]; // Adicionado para permitir batch insert posterior
+} | null> {
   if (!url) return null;
 
   // Validar se API Key existe
@@ -38,6 +42,7 @@ export async function processUrlAnalysis(
         entidades: [],
         theme: "Erro",
       },
+      chunks: [],
     };
   }
 
@@ -62,52 +67,42 @@ export async function processUrlAnalysis(
         clusters: [],
         entidades: [],
       },
+      chunks: [],
     };
   }
 
   // 1.1 Sanitização Inteligente (LLM)
-  // Remove menus, rodapés e sidebars para melhorar a qualidade da análise e dos vetores
   try {
     const sanitized = await sanitizeContent(extracted.content);
     if (sanitized && sanitized.length > 0) {
-      // Atualiza o conteúdo extraído com a versão limpa
       extracted.content = sanitized;
     }
   } catch (err) {
-    console.error(
-      "⚠️ [Sanitizer] Falha na sanitização, mantendo texto original:",
-      err
-    );
+    console.error("⚠️ [Sanitizer] Falha na sanitização:", err);
   }
 
-  // 1.5. Salvar no Banco Vetorial (RAG Anti-Alucinação)
+  // 1.5. Preparar Chunks para o Banco Vetorial
+  let chunks: Document[] = [];
   try {
-    // Normalizar URL para garantir consistência no banco e na busca
     const normalizedUrl = normalizeUrlForMetadata(extracted.url);
-    extracted.url = normalizedUrl; // Atualiza para o restante do fluxo
+    extracted.url = normalizedUrl;
 
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize: 2000,
       chunkOverlap: 200,
     });
-    const docs = await splitter.createDocuments(
+    chunks = await splitter.createDocuments(
       [extracted.content],
       [{ url: normalizedUrl, title: extracted.title }]
     );
-
-    // Adiciona ao Supabase (fire and forget para não travar a UI, ou await rápido)
-    // Vamos usar await para garantir que está lá antes da análise de anchors
-    await getVectorStore().addDocuments(docs);
-    console.log(`✅ [Vector Store] ${docs.length} chunks salvos para ${url}`);
   } catch (err) {
-    console.error("⚠️ [Vector Store] Falha ao salvar embeddings:", err);
-    // Não abortamos o processo, apenas logamos o erro
+    console.error("⚠️ [Chunks] Falha ao gerar chunks:", err);
   }
 
   // 2. Análise
   try {
     const analysis = await analyzeContent(extracted.content, extracted.title);
-    return { extracted, analysis };
+    return { extracted, analysis, chunks };
   } catch (e) {
     console.error("Erro na análise:", e);
     return {
@@ -118,7 +113,23 @@ export async function processUrlAnalysis(
         clusters: [],
         entidades: [],
       },
+      chunks,
     };
+  }
+}
+
+// Nova Action para Inserção em Lote (Batch Insert)
+export async function batchAddVectors(allChunks: any[]): Promise<boolean> {
+  if (!allChunks || allChunks.length === 0) return true;
+  
+  try {
+    console.log(`🚀 [Vector Store] Iniciando batch insert de ${allChunks.length} vetores...`);
+    await getVectorStore().addDocuments(allChunks);
+    console.log(`✅ [Vector Store] Batch insert concluído com sucesso.`);
+    return true;
+  } catch (err) {
+    console.error("❌ [Vector Store] Falha no batch insert:", err);
+    return false;
   }
 }
 

@@ -223,6 +223,13 @@ export default function TrendsMasterPage() {
       clearInterval(progressInterval);
       setProgress(100);
 
+      // Verificação de segurança para evitar erro crítico em caso de timeout
+      if (!result) {
+        throw new Error(
+          "O servidor não retornou uma resposta válida. Isso geralmente ocorre por Timeout (limite de 5 minutos excedido). Tente reduzir o número de tópicos ou períodos."
+        );
+      }
+
       if (result.success && result.report) {
         addLog("✅ Pipeline concluída com sucesso!");
         addLog(`📝 Relatório gerado: ${result.report.periods.length} períodos`);
@@ -233,7 +240,7 @@ export default function TrendsMasterPage() {
       }
     } catch (error) {
       clearInterval(progressInterval);
-      addLog(`❌ Erro crítico: ${error}`);
+      addLog(`❌ Erro crítico: ${error instanceof Error ? error.message : error}`);
     } finally {
       setIsRunning(false);
     }

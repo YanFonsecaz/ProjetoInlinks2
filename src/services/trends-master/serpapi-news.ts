@@ -168,23 +168,22 @@ export async function fetchNews(
   maxArticles: number = 3,
   periodo: TrendsPeriod = "mensal"
 ): Promise<NewsResult[]> {
-  const results: NewsResult[] = [];
-
-  for (const keyword of keywords) {
+  console.log(`[SerpAPI News] Iniciando busca paralela para ${keywords.length} keywords...`);
+  
+  const newsPromises = keywords.map(async (keyword) => {
     try {
       const articles = await fetchNewsForKeyword(keyword, maxArticles, periodo);
-      results.push({ keyword, articles });
+      return { keyword, articles };
     } catch (error) {
       console.error(
         `[SerpAPI News] Erro ao buscar notícias para "${keyword}":`,
         error
       );
-      // Continua com próxima keyword mesmo se falhar
-      results.push({ keyword, articles: [] });
+      return { keyword, articles: [] };
     }
-  }
+  });
 
-  return results;
+  return Promise.all(newsPromises);
 }
 
 /**
