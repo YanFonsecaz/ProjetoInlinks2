@@ -11,6 +11,9 @@ Atue como um Social Media Sênior especializado em Content Marketing e Estratég
 CONTEÚDO BASE:
 "{content}"
 
+CONTEXTO DAS ETAPAS ANTERIORES:
+{context}
+
 PERSONA DA MARCA:
 - Tom de Voz: {tone}
 - Público Alvo: {target}
@@ -74,7 +77,8 @@ const STEP_INSTRUCTIONS = {
 export async function processSocialStep(
   step: keyof typeof STEP_INSTRUCTIONS,
   content: string,
-  persona: { tone: string; target: string; objectives: string[] }
+  persona: { tone: string; target: string; objectives: string[] },
+  previousContext?: string
 ) {
   try {
     const llm = await getLLM();
@@ -83,6 +87,7 @@ export async function processSocialStep(
 
     const result = await chain.invoke({
       content,
+      context: previousContext || "Nenhum contexto anterior disponível.",
       tone: persona.tone,
       target: persona.target,
       objectives: persona.objectives.join(", "),

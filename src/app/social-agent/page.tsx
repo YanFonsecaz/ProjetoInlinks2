@@ -27,6 +27,7 @@ import {
   X
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import PersonaForm from "@/components/PersonaForm";
 
 const STEPS = [
@@ -55,7 +56,7 @@ export default function SocialAgentPage() {
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
 
   // Fetch personas on mount
-  const fetchPersonas = async () => {
+  const fetchPersonas = async (selectLatest = false) => {
     const { data, error } = await supabase
       .from("brand_personas")
       .select("*")
@@ -63,7 +64,8 @@ export default function SocialAgentPage() {
     
     if (!error && data) {
       setSavedPersonas(data);
-      if (data.length > 0) {
+      // Se solicitado ou se for a primeira carga sem persona selecionada
+      if ((data.length > 0 && !persona.tone) || selectLatest) {
         const p = data[0];
         setPersona({
           tone: p.tipo_de_tom,
@@ -107,9 +109,21 @@ export default function SocialAgentPage() {
   const runStep = async (index: number, contentOverride?: string) => {
     const stepId = STEPS[index].id as any;
     setLoading(true);
-    const res = await processSocialStep(stepId, contentOverride || content, persona);
+    
+    // Coletar contexto das etapas anteriores
+    let previousContext = "";
+    if (index > 0) {
+      previousContext = STEPS.slice(0, index)
+        .map(s => `--- SAÍDA DA ETAPA ${s.label.toUpperCase()} ---\n${outputs[s.id] || "Não disponível"}`)
+        .join("\n\n");
+    }
+
+    const res = await processSocialStep(stepId, contentOverride || content, persona, previousContext);
+    
     if (res.success && res.output) {
       setOutputs(prev => ({ ...prev, [stepId]: res.output || "" }));
+    } else {
+      alert(`Erro na etapa ${stepId}: ${res.error || "Erro desconhecido"}`);
     }
     setLoading(false);
   };
@@ -275,7 +289,7 @@ export default function SocialAgentPage() {
               </div>
             ) : (
               <div className="prose prose-slate max-w-none">
-                <ReactMarkdown>{output || ""}</ReactMarkdown>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{output || ""}</ReactMarkdown>
               </div>
             )}
           </div>
@@ -342,7 +356,7 @@ export default function SocialAgentPage() {
               <PersonaForm 
                 onSuccess={() => {
                   setIsPersonaModalOpen(false);
-                  fetchPersonas();
+                  fetchPersonas(true); // Recarrega e seleciona a nova persona
                 }} 
               />
             </div>
