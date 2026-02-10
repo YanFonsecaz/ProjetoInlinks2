@@ -9,7 +9,10 @@ const WINDOW_MS = 60 * 60 * 1000; // 1 hora em milissegundos
  * @param endpoint Nome do endpoint (ex: 'persona')
  * @returns boolean indicando se a requisição é permitida
  */
-export async function checkRateLimit(userId: string, endpoint: string): Promise<boolean> {
+export async function checkRateLimit(
+  userId: string,
+  endpoint: string,
+): Promise<boolean> {
   const now = new Date();
 
   // Busca o registro atual do usuário
@@ -20,7 +23,8 @@ export async function checkRateLimit(userId: string, endpoint: string): Promise<
     .eq("endpoint", endpoint)
     .single();
 
-  if (error && error.code !== "PGRST116") { // PGRST116 é 'no rows returned'
+  if (error && error.code !== "PGRST116") {
+    // PGRST116 é 'no rows returned'
     console.error("Erro no rate limit:", error.message);
     return true; // Falha segura: permite a requisição em caso de erro no DB
   }

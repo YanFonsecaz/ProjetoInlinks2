@@ -13,12 +13,12 @@ export async function verifyAuth(req: NextRequest): Promise<string | null> {
   }
 
   const token = authHeader.split(" ")[1];
-  
+
   // Bypass para desenvolvimento/teste
   if (token === "mock-token") {
     return "00000000-0000-0000-0000-000000000000";
   }
-  
+
   // No Supabase, o token JWT pode ser verificado diretamente chamando getUser
   const { data, error } = await supabase.auth.getUser(token);
 

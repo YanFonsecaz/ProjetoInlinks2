@@ -5,9 +5,11 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 /**
  * Serviço para analisar automaticamente o tom de voz e persona a partir de um texto de referência
  */
-export async function analyzeToneAndPersona(textoReferencia: string): Promise<string> {
+export async function analyzeToneAndPersona(
+  textoReferencia: string,
+): Promise<string> {
   const llm = await getLLM();
-  
+
   const prompt = PromptTemplate.fromTemplate(`
     Você é um Especialista em Branding e Social Media Sênior. 
     Sua tarefa é analisar o texto de referência abaixo e identificar o tom de voz predominante.
@@ -27,7 +29,7 @@ export async function analyzeToneAndPersona(textoReferencia: string): Promise<st
   `);
 
   const chain = prompt.pipe(llm).pipe(new StringOutputParser());
-  
+
   const result = await chain.invoke({ texto: textoReferencia });
   return result;
 }

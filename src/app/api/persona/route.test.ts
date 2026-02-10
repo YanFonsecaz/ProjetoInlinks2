@@ -56,7 +56,7 @@ describe("POST /api/persona", () => {
   it("deve retornar 429 se exceder o rate limit", async () => {
     (verifyAuth as jest.Mock).mockResolvedValue("user-123");
     (checkRateLimit as jest.Mock).mockResolvedValue(false);
-    
+
     const req = new NextRequest("http://localhost/api/persona", {
       method: "POST",
       body: JSON.stringify(validBody),
@@ -69,7 +69,7 @@ describe("POST /api/persona", () => {
   it("deve retornar 400 se o corpo for inválido", async () => {
     (verifyAuth as jest.Mock).mockResolvedValue("user-123");
     (checkRateLimit as jest.Mock).mockResolvedValue(true);
-    
+
     const req = new NextRequest("http://localhost/api/persona", {
       method: "POST",
       body: JSON.stringify({ tipo_de_tom: "invalido" }),
@@ -85,7 +85,9 @@ describe("POST /api/persona", () => {
     (supabase.from as jest.Mock).mockReturnValue({
       insert: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { id: "persona-123" }, error: null }),
+      single: jest
+        .fn()
+        .mockResolvedValue({ data: { id: "persona-123" }, error: null }),
     });
 
     const req = new NextRequest("http://localhost/api/persona", {
@@ -107,7 +109,9 @@ describe("POST /api/persona", () => {
     (supabase.from as jest.Mock).mockReturnValue({
       insert: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { id: "persona-456" }, error: null }),
+      single: jest
+        .fn()
+        .mockResolvedValue({ data: { id: "persona-456" }, error: null }),
     });
 
     const bodyWithAI = {
@@ -153,7 +157,9 @@ describe("POST /api/persona", () => {
     (supabase.from as jest.Mock).mockReturnValue({
       insert: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: null, error: { message: "DB Error" } }),
+      single: jest
+        .fn()
+        .mockResolvedValue({ data: null, error: { message: "DB Error" } }),
     });
 
     const req = new NextRequest("http://localhost/api/persona", {
@@ -191,7 +197,9 @@ describe("PATCH /api/persona", () => {
       update: jest.fn().mockReturnThis(),
       eq: jest.fn().mockReturnThis(),
       select: jest.fn().mockReturnThis(),
-      single: jest.fn().mockResolvedValue({ data: { id: "1", nome: "Novo" }, error: null }),
+      single: jest
+        .fn()
+        .mockResolvedValue({ data: { id: "1", nome: "Novo" }, error: null }),
     });
 
     const req = new NextRequest("http://localhost/api/persona", {
@@ -210,7 +218,7 @@ describe("PATCH /api/persona", () => {
 describe("DELETE /api/persona", () => {
   it("deve excluir uma persona com sucesso", async () => {
     (verifyAuth as jest.Mock).mockResolvedValue("user-123");
-    
+
     // Mock manual para garantir sucesso
     (supabase.from as jest.Mock).mockReturnValue({
       delete: jest.fn().mockReturnThis(),

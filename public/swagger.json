@@ -109,11 +109,7 @@
           },
           "status_processamento": {
             "type": "string",
-            "enum": [
-              "completed",
-              "processing",
-              "failed"
-            ]
+            "enum": ["completed", "processing", "failed"]
           },
           "tempo_estimado_analise": {
             "type": "integer"

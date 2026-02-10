@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  TrendingUp, 
-  Users, 
-  Sparkles, 
-  Home, 
-  BookOpen, 
-  Settings 
+import {
+  TrendingUp,
+  Users,
+  Sparkles,
+  Home,
+  BookOpen,
+  Settings,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -61,9 +61,7 @@ export default function Navbar() {
                 <span className="text-lg font-bold text-slate-900">
                   digital
                 </span>
-                <p className="text-[10px] text-slate-500">
-                  AI Agent Suite
-                </p>
+                <p className="text-[10px] text-slate-500">AI Agent Suite</p>
               </div>
             </Link>
 

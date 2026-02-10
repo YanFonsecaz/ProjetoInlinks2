@@ -18,13 +18,17 @@ const anchorSchema = z.object({
       trecho: z
         .string()
         .describe("A frase completa onde a âncora aparece ou será inserida"),
-      type: z.enum(["exact", "insert"]).describe("Tipo de oportunidade: 'exact' (âncora existente) ou 'insert' (novo parágrafo sugerido)"),
+      type: z
+        .enum(["exact", "insert"])
+        .describe(
+          "Tipo de oportunidade: 'exact' (âncora existente) ou 'insert' (novo parágrafo sugerido)",
+        ),
       original_text: z
         .string()
         .nullable()
         .optional()
         .describe(
-          "O texto original que será substituído (apenas para 'rewrite')"
+          "O texto original que será substituído (apenas para 'rewrite')",
         ),
       pillar_context: z
         .string()
@@ -38,7 +42,7 @@ const anchorSchema = z.object({
         .string()
         .describe("O nome do tópico para qual a âncora aponta"),
       score: z.number().describe("Relevância da âncora (0-1)"),
-    })
+    }),
   ),
 });
 
@@ -63,7 +67,7 @@ function searchNormalize(text: string): string {
  */
 function extractSentenceWithAnchor(
   content: string,
-  anchor: string
+  anchor: string,
 ): string | null {
   // Limpar a âncora de caracteres especiais que o LLM pode ter inserido (ex: #)
   const cleanAnchor = searchNormalize(anchor);
@@ -104,7 +108,7 @@ function extractSentenceWithAnchor(
     // VERIFICAÇÃO DE URL/PATH: Não linkar partes de uma URL (ex: "seo" em ".../o-que-e-seo-...")
     const surroundingText = content.slice(
       Math.max(0, index - 10),
-      Math.min(content.length, index + cleanAnchor.length + 10)
+      Math.min(content.length, index + cleanAnchor.length + 10),
     );
     // Se o texto ao redor não tem espaços e tem barras/pontos/hífens, é suspeito
     if (
@@ -188,11 +192,11 @@ export async function findAnchorOpportunities(
   originUrl: string,
   maxInlinks: number = 3,
   mandatoryAnchors: string[] = [],
-  allowInserts: boolean = false
+  allowInserts: boolean = false,
 ): Promise<AnchorOpportunity[]> {
   const limit = Math.floor(Number(maxInlinks)) || 3;
   console.log(
-    `[Anchor Selector] Iniciando para ${originUrl} com ${targets.length} targets. Limit validado: ${limit} links.`
+    `[Anchor Selector] Iniciando para ${originUrl} com ${targets.length} targets. Limit validado: ${limit} links.`,
   );
 
   // O conteúdo já deve vir sanitizado do fluxo anterior (actions.ts ou crawler)
@@ -203,7 +207,7 @@ export async function findAnchorOpportunities(
   console.log(
     `[Anchor Selector] Preview do conteúdo (${
       contentToUse.length
-    } chars): "${contentToUse.slice(0, 100).replace(/\n/g, " ")}..."`
+    } chars): "${contentToUse.slice(0, 100).replace(/\n/g, " ")}..."`,
   );
 
   // Usar temperatura 0.3 para equilíbrio entre criatividade e precisão, com modelo GPT-4-turbo (gpt4.1 requested)
@@ -215,7 +219,7 @@ export async function findAnchorOpportunities(
       (t) =>
         `- URL: ${t.url}\n  Tópicos: ${t.clusters.join(", ")}\n  Tema: ${
           t.theme || "N/A"
-        }\n  Intenção: ${t.intencao || "N/A"}`
+        }\n  Intenção: ${t.intencao || "N/A"}`,
     )
     .join("\n\n");
 
@@ -242,7 +246,7 @@ export async function findAnchorOpportunities(
     const ragPromises = mainTargets.map(async (t) => {
       const query = t.clusters[0] || t.theme || t.url;
       console.log(`[RAG] Buscando contexto paralelo para: "${query}"`);
-      
+
       try {
         const results = await store.similaritySearch(query, 2, {
           url: normalizedOrigin,
@@ -255,7 +259,7 @@ export async function findAnchorOpportunities(
     });
 
     const allRagResults = await Promise.all(ragPromises);
-    
+
     allRagResults.flat().forEach((doc: Document) => {
       if (doc.pageContent.length > 50) {
         relevantDocs.add(doc.pageContent);
@@ -264,13 +268,13 @@ export async function findAnchorOpportunities(
 
     if (relevantDocs.size === 0) {
       console.log(
-        "[RAG] Nenhum contexto específico encontrado, usando texto completo (truncado)."
+        "[RAG] Nenhum contexto específico encontrado, usando texto completo (truncado).",
       );
       contextToAnalyze = contentToUse.slice(0, 15000); // Fallback seguro com contentToUse
     } else {
       contextToAnalyze = Array.from(relevantDocs).join("\n\n---\n\n");
       console.log(
-        `[RAG] Contexto otimizado gerado: ${relevantDocs.size} blocos.`
+        `[RAG] Contexto otimizado gerado: ${relevantDocs.size} blocos.`,
       );
     }
   } catch (e) {
@@ -342,11 +346,12 @@ export async function findAnchorOpportunities(
 
   const chain = prompt.pipe(structuredLLM);
 
-  const mandatory_section = mandatoryAnchors.length > 0 
-    ? `ÂNCORAS OBRIGATÓRIAS (Prioridade Máxima): ${mandatoryAnchors.join(", ")}`
-    : "";
-  
-  const insert_section = allowInserts 
+  const mandatory_section =
+    mandatoryAnchors.length > 0
+      ? `ÂNCORAS OBRIGATÓRIAS (Prioridade Máxima): ${mandatoryAnchors.join(", ")}`
+      : "";
+
+  const insert_section = allowInserts
     ? "MODO INSERÇÃO ATIVADO: Se não encontrar oportunidades 'exact' de alta qualidade, sugira um novo parágrafo (type: 'insert') que contextualize o link."
     : "APENAS TIPO 'EXACT' PERMITIDO.";
 
@@ -362,7 +367,7 @@ export async function findAnchorOpportunities(
     });
 
     console.log(
-      `[Anchor Selector] LLM retornou ${result.opportunities.length} oportunidades brutas.`
+      `[Anchor Selector] LLM retornou ${result.opportunities.length} oportunidades brutas.`,
     );
 
     const opportunities: AnchorOpportunity[] = [];
@@ -378,7 +383,7 @@ export async function findAnchorOpportunities(
       const uniqueKey = `${opp.anchor.trim().toLowerCase()}|${opp.target_url}`;
       if (seenAnchors.has(uniqueKey)) {
         console.log(
-          `[Anchor Selector] Rejeitado (Duplicata Local): ${opp.anchor}`
+          `[Anchor Selector] Rejeitado (Duplicata Local): ${opp.anchor}`,
         );
         continue;
       }
@@ -386,7 +391,7 @@ export async function findAnchorOpportunities(
       // FILTRO EXTRA: Rejeitar âncoras que parecem mídia ou arquivos
       if (/\.(jpg|png|webp|gif|pdf)$/i.test(opp.anchor.trim())) {
         console.log(
-          `[Anchor Selector] Rejeitado (Arquivo/Imagem): ${opp.anchor}`
+          `[Anchor Selector] Rejeitado (Arquivo/Imagem): ${opp.anchor}`,
         );
         continue;
       }
@@ -400,7 +405,7 @@ export async function findAnchorOpportunities(
 
         if (!content.toLowerCase().includes(opp.anchor.toLowerCase())) {
           console.log(
-            `[Anchor Selector] Rejeitado (Exact não encontrado): ${opp.anchor}`
+            `[Anchor Selector] Rejeitado (Exact não encontrado): ${opp.anchor}`,
           );
           continue;
         }
@@ -413,14 +418,14 @@ export async function findAnchorOpportunities(
           finalTrecho = realSentence;
         } else {
           console.log(
-            `[Anchor Selector] Rejeitado (Alucinação/Não encontrado estritamente): ${opp.anchor}`
+            `[Anchor Selector] Rejeitado (Alucinação/Não encontrado estritamente): ${opp.anchor}`,
           );
           continue;
         }
 
         if (!isNaturalSentence(finalTrecho)) {
           console.log(
-            `[Anchor Selector] Rejeitado (Frase não natural): ${finalTrecho}`
+            `[Anchor Selector] Rejeitado (Frase não natural): ${finalTrecho}`,
           );
           continue;
         }
@@ -430,7 +435,7 @@ export async function findAnchorOpportunities(
         // Regra: Se começa com * ou - e tem menos de 10 palavras, e contém palavras "vendedoras" ou é muito curto.
         const originalLine = content.slice(
           Math.max(0, content.indexOf(opp.anchor) - 20),
-          content.indexOf(opp.anchor) + opp.anchor.length + 20
+          content.indexOf(opp.anchor) + opp.anchor.length + 20,
         );
         const isListItem =
           /^\s*[\*\-]\s+/.test(originalLine) ||
@@ -442,7 +447,7 @@ export async function findAnchorOpportunities(
           // Isso pega "Run In-depth SEO technical audits" (6 palavras)
           if (wordCount < 15) {
             console.log(
-              `[Anchor Selector] Rejeitado (Suspeita de Widget/Lista Curta): ${opp.trecho}`
+              `[Anchor Selector] Rejeitado (Suspeita de Widget/Lista Curta): ${opp.trecho}`,
             );
             continue;
           }
@@ -455,17 +460,21 @@ export async function findAnchorOpportunities(
       } else if (type === "insert") {
         // Para inserção, apenas validamos se o trecho é natural e contém a âncora sugerida
         if (!opp.trecho.toLowerCase().includes(opp.anchor.toLowerCase())) {
-          console.log(`[Anchor Selector] Rejeitado (Insert sem âncora): ${opp.anchor}`);
+          console.log(
+            `[Anchor Selector] Rejeitado (Insert sem âncora): ${opp.anchor}`,
+          );
           continue;
         }
         if (opp.trecho.length < 50) {
-          console.log(`[Anchor Selector] Rejeitado (Insert muito curto): ${opp.trecho}`);
+          console.log(
+            `[Anchor Selector] Rejeitado (Insert muito curto): ${opp.trecho}`,
+          );
           continue;
         }
       } else {
         // Qualquer outro tipo que o LLM alucinar será ignorado
         console.warn(
-          `[Anchor Selector] Tipo desconhecido/proibido rejeitado: ${type}`
+          `[Anchor Selector] Tipo desconhecido/proibido rejeitado: ${type}`,
         );
         continue;
       }
@@ -488,7 +497,7 @@ export async function findAnchorOpportunities(
             targetTopicLower.includes(url) ||
             clusters.some(
               (c) =>
-                targetTopicLower.includes(c) || c.includes(targetTopicLower)
+                targetTopicLower.includes(c) || c.includes(targetTopicLower),
             ) ||
             (theme && targetTopicLower.includes(theme))
           );
@@ -502,7 +511,7 @@ export async function findAnchorOpportunities(
           normalizeUrlForMetadata(originUrl)
         ) {
           console.log(
-            `[Anchor Selector] Rejeitado (Self-Link detectado): ${bestTarget.url} é igual a origem.`
+            `[Anchor Selector] Rejeitado (Self-Link detectado): ${bestTarget.url} é igual a origem.`,
           );
           // Tentar encontrar outro target se possível (opcional, aqui apenas rejeitamos)
           bestTarget = undefined;
@@ -525,7 +534,7 @@ export async function findAnchorOpportunities(
         });
       } else {
         console.log(
-          `[Anchor Selector] Rejeitado (Sem target match): ${opp.target_topic} (Normalizado: ${targetTopicLower})`
+          `[Anchor Selector] Rejeitado (Sem target match): ${opp.target_topic} (Normalizado: ${targetTopicLower})`,
         );
         // Logar targets disponíveis (limitado)
         if (targets.length > 0) {
@@ -560,7 +569,7 @@ export async function findAnchorOpportunities(
       }
 
       console.log(
-        `[Anchor Selector] ❌ ALUCINAÇÃO DETECTADA: O trecho sugerido não existe no texto original.\n   Trecho IA: "${o.trecho}"`
+        `[Anchor Selector] ❌ ALUCINAÇÃO DETECTADA: O trecho sugerido não existe no texto original.\n   Trecho IA: "${o.trecho}"`,
       );
       return false;
     });
@@ -569,7 +578,7 @@ export async function findAnchorOpportunities(
       console.log(
         `[Anchor Selector] 🛡️ Anti-Hallucination: ${
           opportunities.length - validContentOpps.length
-        } oportunidades removidas por não existirem no texto.`
+        } oportunidades removidas por não existirem no texto.`,
       );
     }
 
@@ -630,11 +639,11 @@ export async function findAnchorOpportunities(
       if (
         blockedPhrases.some(
           (phrase) =>
-            lowerAnchor.includes(phrase) || lowerTrecho.includes(phrase)
+            lowerAnchor.includes(phrase) || lowerTrecho.includes(phrase),
         )
       ) {
         console.log(
-          `[Anchor Selector] Rejeitado (Boilerplate Bloqueado): ${o.anchor}`
+          `[Anchor Selector] Rejeitado (Boilerplate Bloqueado): ${o.anchor}`,
         );
         return false;
       }
@@ -645,13 +654,13 @@ export async function findAnchorOpportunities(
       console.log(
         `[Anchor Selector] Filtro de Qualidade: ${
           opportunities.length - highQualityOpps.length
-        } oportunidades descartadas por score < 0.8.`
+        } oportunidades descartadas por score < 0.8.`,
       );
     }
 
     // Ordenar por score (maior para menor) e limitar à quantidade solicitada
     console.log(
-      `[Anchor Selector] Aplicando corte final. Max solicitado: ${limit}. Oportunidades Válidas (>=0.8): ${highQualityOpps.length}`
+      `[Anchor Selector] Aplicando corte final. Max solicitado: ${limit}. Oportunidades Válidas (>=0.8): ${highQualityOpps.length}`,
     );
     const finalOpportunities = highQualityOpps
       .sort((a, b) => b.score - a.score)
@@ -663,16 +672,16 @@ export async function findAnchorOpportunities(
       console.log(`[Anchor Selector] 🤖 Acionando Agente Validator DOM...`);
       const validatedOpps = await validateOpportunitiesInDOM(
         finalOpportunities,
-        html
+        html,
       );
 
       console.log(
-        `[Anchor Selector] Finalizado com ${validatedOpps.length} oportunidades validadas (Limit: ${limit}).`
+        `[Anchor Selector] Finalizado com ${validatedOpps.length} oportunidades validadas (Limit: ${limit}).`,
       );
       return validatedOpps;
     } else {
       console.log(
-        `[Anchor Selector] Aviso: Sem HTML para validação DOM. Retornando ${finalOpportunities.length} oportunidades (pode conter links inválidos).`
+        `[Anchor Selector] Aviso: Sem HTML para validação DOM. Retornando ${finalOpportunities.length} oportunidades (pode conter links inválidos).`,
       );
       return finalOpportunities;
     }
