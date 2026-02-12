@@ -114,11 +114,15 @@ export async function generateContentStrategy(
 
     const chain = prompt.pipe(structuredLLM);
 
+    const objectivesStr = Array.isArray(persona.objectives)
+      ? persona.objectives.join(", ")
+      : String(persona.objectives || "");
+
     const result = await chain.invoke({
       content,
       tone: persona.tone,
       target: persona.target,
-      objectives: persona.objectives.join(", "),
+      objectives: objectivesStr,
     });
 
     return { success: true, data: result };

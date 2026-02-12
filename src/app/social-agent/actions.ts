@@ -35,17 +35,22 @@ Responda sempre em Português do Brasil.
 export async function chatWithSocialAgent(
   messages: { role: string; content: string }[],
   persona: { tone: string; target: string; objectives: string[] },
-  contextContent?: string
+  contextContent?: string,
 ) {
   try {
     const llm = await getLLM();
-    
+
     // Converter histórico simples para formato LangChain
     // Se houver conteúdo de base (artigo extraído), injetamos como contexto inicial invisível
-    let systemMessage = SYSTEM_PROMPT
-      .replace("{tone}", persona.tone)
+
+    // Tratamento defensivo para evitar erro no .join()
+    const objectivesStr = Array.isArray(persona.objectives)
+      ? persona.objectives.join(", ")
+      : String(persona.objectives || "");
+
+    let systemMessage = SYSTEM_PROMPT.replace("{tone}", persona.tone)
       .replace("{target}", persona.target)
-      .replace("{objectives}", persona.objectives.join(", "));
+      .replace("{objectives}", objectivesStr);
 
     if (contextContent) {
       systemMessage += `\n\nCONTEÚDO BASE PARA TRABALHO:\n"${contextContent}"\n\nUse este conteúdo como referência principal.`;
@@ -53,14 +58,17 @@ export async function chatWithSocialAgent(
 
     const promptMessages = [
       ["system", systemMessage],
-      ...messages.map(m => [m.role === 'user' ? 'human' : 'assistant', m.content])
+      ...messages.map((m) => [
+        m.role === "user" ? "human" : "assistant",
+        m.content,
+      ]),
     ];
 
     const prompt = ChatPromptTemplate.fromMessages(promptMessages as any);
     const chain = prompt.pipe(llm).pipe(new StringOutputParser());
 
     const result = await chain.invoke({});
-    
+
     return { success: true, output: result };
   } catch (error: any) {
     console.error("Erro no chatWithSocialAgent:", error);
@@ -70,7 +78,7 @@ export async function chatWithSocialAgent(
 
 export async function processUrlStrategy(
   url: string,
-  persona: { tone: string; target: string; objectives: string[] }
+  persona: { tone: string; target: string; objectives: string[] },
 ) {
   try {
     // 1. Extrair conteúdo
@@ -79,11 +87,11 @@ export async function processUrlStrategy(
 
     // 2. Gerar Estratégia Estruturada
     const strategy = await generateContentStrategy(extracted.content, persona);
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       content: extracted.content,
-      strategy: strategy.success ? strategy.data : null 
+      strategy: strategy.success ? strategy.data : null,
     };
   } catch (error: any) {
     return { success: false, error: error.message };

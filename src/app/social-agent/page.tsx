@@ -76,7 +76,9 @@ export default function SocialAgentPage() {
               typeof p.publico_alvo === "string"
                 ? p.publico_alvo
                 : JSON.stringify(p.publico_alvo),
-            objectives: p.objetivos_comunicacao,
+            objectives: Array.isArray(p.objetivos_comunicacao)
+              ? p.objetivos_comunicacao
+              : [],
           });
         }
       }
@@ -214,7 +216,7 @@ ${strategy.linkedin_post.body}
         ...newMessages,
         {
           role: "assistant",
-          content: "❌ Desculpe, tive um erro ao processar sua mensagem.",
+          content: `❌ Erro: ${res.error || "Desculpe, tive um erro ao processar sua mensagem."}`,
         },
       ]);
     }
@@ -270,7 +272,9 @@ ${strategy.linkedin_post.body}
                       typeof p.publico_alvo === "string"
                         ? p.publico_alvo
                         : JSON.stringify(p.publico_alvo),
-                    objectives: p.objetivos_comunicacao,
+                    objectives: Array.isArray(p.objetivos_comunicacao)
+                      ? p.objetivos_comunicacao
+                      : [],
                   });
                 }
               }}

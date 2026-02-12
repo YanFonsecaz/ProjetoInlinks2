@@ -5,7 +5,7 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { getLLM } from "@/core/llm";
 import { AnchorOpportunity } from "@/types";
 import { getVectorStore } from "@/core/vector-store";
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Document } from "@langchain/core/documents";
 import { validateOpportunitiesInDOM } from "./dom_validator"; // Multi-Agent: Importando o Validator
 
