@@ -14,6 +14,7 @@ Sua missão é ajudar o usuário a transformar conteúdos (artigos, ideias) em p
 
 PERSONA ATIVA DA MARCA:
 - Tom de Voz: {tone}
+- Segmento de Atuação: {segmento}
 - Público Alvo: {target}
 - Objetivos: {objectives}
 
@@ -34,7 +35,12 @@ Responda sempre em Português do Brasil.
 
 export async function chatWithSocialAgent(
   messages: { role: string; content: string }[],
-  persona: { tone: string; target: string; objectives: string[] },
+  persona: {
+    tone: string;
+    target: string;
+    objectives: string[];
+    segmento?: string;
+  },
   contextContent?: string,
 ) {
   try {
@@ -48,9 +54,12 @@ export async function chatWithSocialAgent(
       ? persona.objectives.join(", ")
       : String(persona.objectives || "");
 
+    const segmentoStr = persona.segmento || "Geral";
+
     let systemMessage = SYSTEM_PROMPT.replace("{tone}", persona.tone)
       .replace("{target}", persona.target)
-      .replace("{objectives}", objectivesStr);
+      .replace("{objectives}", objectivesStr)
+      .replace("{segmento}", segmentoStr);
 
     if (contextContent) {
       systemMessage += `\n\nCONTEÚDO BASE PARA TRABALHO:\n"${contextContent}"\n\nUse este conteúdo como referência principal.`;
@@ -78,7 +87,12 @@ export async function chatWithSocialAgent(
 
 export async function processUrlStrategy(
   url: string,
-  persona: { tone: string; target: string; objectives: string[] },
+  persona: {
+    tone: string;
+    target: string;
+    objectives: string[];
+    segmento?: string;
+  },
 ) {
   try {
     // 1. Extrair conteúdo

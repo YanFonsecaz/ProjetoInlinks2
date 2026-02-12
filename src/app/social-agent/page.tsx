@@ -43,6 +43,7 @@ export default function SocialAgentPage() {
     tone: "corporativo",
     target: "Profissionais de marketing e empresários",
     objectives: ["Autoridade", "Engajamento"],
+    segmento: "Marketing Digital",
   });
   const [savedPersonas, setSavedPersonas] = useState<any[]>([]);
   const [isPersonaModalOpen, setIsPersonaModalOpen] = useState(false);
@@ -79,6 +80,10 @@ export default function SocialAgentPage() {
             objectives: Array.isArray(p.objetivos_comunicacao)
               ? p.objetivos_comunicacao
               : [],
+            segmento:
+              typeof p.publico_alvo === "object" && p.publico_alvo?.segmento
+                ? p.publico_alvo.segmento
+                : "Geral",
           });
         }
       }
@@ -275,6 +280,11 @@ ${strategy.linkedin_post.body}
                     objectives: Array.isArray(p.objetivos_comunicacao)
                       ? p.objetivos_comunicacao
                       : [],
+                    segmento:
+                      typeof p.publico_alvo === "object" &&
+                      p.publico_alvo?.segmento
+                        ? p.publico_alvo.segmento
+                        : "Geral",
                   });
                 }
               }}
